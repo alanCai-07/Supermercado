@@ -201,22 +201,22 @@ graph TB
     GeneradorPDF -->|"genera"| Factura
     Inventario -->|"maneja"| Producto
 
-    %% == ESTILOS ==
-    style Producto fill:#87CEEB
-    style Cliente fill:#87CEEB
-    style Cajero fill:#87CEEB
-    style ItemFactura fill:#FFE4B5
-    style Factura fill:#FFE4B5
-    style Estado fill:#DDA0DD
-    style MetodoPago fill:#90EE90
-    style PagoEfectivo fill:#90EE90
-    style PagoTarjeta fill:#90EE90
-    style FacturaDAO fill:#FFB6C1
-    style ClienteDAO fill:#FFB6C1
-    style CajeroDAO fill:#FFB6C1
-    style SistemaFacturacion fill:#FFFFE0
-    style Inventario fill:#FFFFE0
-    style GeneradorPDF fill:#F0FFF0
+    %% == ESTILOS NEUTROS ==
+    style Producto fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+    style Cliente fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+    style Cajero fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+    style ItemFactura fill:#F0F0F0,stroke:#444444,stroke-width:2px,color:#000000
+    style Factura fill:#F0F0F0,stroke:#444444,stroke-width:2px,color:#000000
+    style Estado fill:#E8E8E8,stroke:#333333,stroke-width:2px,color:#000000
+    style MetodoPago fill:#DADADA,stroke:#333333,stroke-width:2px,color:#000000
+    style PagoEfectivo fill:#DADADA,stroke:#333333,stroke-width:2px,color:#000000
+    style PagoTarjeta fill:#DADADA,stroke:#333333,stroke-width:2px,color:#000000
+    style FacturaDAO fill:#F2F2F2,stroke:#454545,stroke-width:2px,color:#000000
+    style ClienteDAO fill:#F2F2F2,stroke:#454545,stroke-width:2px,color:#000000
+    style CajeroDAO fill:#F2F2F2,stroke:#454545,stroke-width:2px,color:#000000
+    style SistemaFacturacion fill:#ECECEC,stroke:#333333,stroke-width:2px,color:#000000
+    style Inventario fill:#ECECEC,stroke:#333333,stroke-width:2px,color:#000000
+    style GeneradorPDF fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
 ```
 
 ---
