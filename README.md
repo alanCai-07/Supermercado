@@ -1,4 +1,5 @@
 # Sistema de Facturacion Electronica - Supermercado
+
 ### Guia de instalacion y ejecucion en VS Code
 
 ---
@@ -7,15 +8,16 @@
 
 Instala estas herramientas antes de comenzar:
 
-| Herramienta | Version | Descarga |
-|-------------|---------|----------|
-| Java JDK    | 17 o superior | https://adoptium.net |
-| Maven       | 3.8+    | https://maven.apache.org/download.cgi |
-| MySQL       | 8.0+    | https://dev.mysql.com/downloads/installer |
-| VS Code     | Ultima  | https://code.visualstudio.com |
+| Herramienta | Version       | Descarga                                  |
+| ----------- | ------------- | ----------------------------------------- |
+| Java JDK    | 17 o superior | https://adoptium.net                      |
+| Maven       | 3.8+          | https://maven.apache.org/download.cgi     |
+| MySQL       | 8.0+          | https://dev.mysql.com/downloads/installer |
+| VS Code     | Ultima        | https://code.visualstudio.com             |
 
 **Extensiones de VS Code necesarias:**
-- Extension Pack for Java (Microsoft)  →  busca en Extensions: `vscjava.vscode-java-pack`
+
+- Extension Pack for Java (Microsoft) → busca en Extensions: `vscjava.vscode-java-pack`
 
 ---
 
@@ -30,6 +32,7 @@ mysql -u root -p < setup.sql
 O copia y pega el contenido de `setup.sql` en MySQL Workbench y ejecutalo.
 
 Esto crea:
+
 - La base de datos `supermercado_db`
 - Las 6 tablas con sus relaciones
 - 12 productos de prueba
@@ -38,7 +41,7 @@ Esto crea:
 **Cajeros de prueba:**
 
 | ID   | Nombre        | Contrasena |
-|------|---------------|------------|
+| ---- | ------------- | ---------- |
 | C001 | Administrador | admin123   |
 | C002 | Caja 2        | 1234       |
 
@@ -47,11 +50,13 @@ Esto crea:
 ## PASO 2 — Configurar la conexion en el codigo
 
 Abre el archivo:
+
 ```
 src/main/java/supermercado/db/ConexionDB.java
 ```
 
 Edita estas 3 lineas con tus datos de MySQL:
+
 ```java
 private static final String URL      = "jdbc:mysql://localhost:3306/supermercado_db...";
 private static final String USUARIO  = "root";         // tu usuario MySQL
@@ -73,10 +78,12 @@ private static final String PASSWORD = "tu_password";  // tu contrasena MySQL
 ## PASO 4 — Ejecutar el programa
 
 **Opcion A — Desde VS Code:**
+
 - Abre `src/main/java/supermercado/Main.java`
 - Clic en el boton **Run** (▶) que aparece sobre el metodo `main`
 
 **Opcion B — Desde la terminal:**
+
 ```bash
 # En la carpeta raiz del proyecto:
 mvn compile
@@ -84,6 +91,7 @@ mvn exec:java -Dexec.mainClass="supermercado.Main"
 ```
 
 **Opcion C — Con el debugger:**
+
 - Presiona `F5` (usa la configuracion en `.vscode/launch.json`)
 
 ---
@@ -136,169 +144,79 @@ supermercado/
 ## DIAGRAMA UML - CLASES Y RELACIONES
 
 ```mermaid
-classDiagram
-    %% Modelo
-    class Producto {
-        -String id
-        -String nombre
-        -double precio
-        -String categoria
-        -double impuesto
-        -int stock
-        -boolean activo
-        +getPrecioConIva() double
-        +setStock(int)
-        +setPrecio(double)
-    }
+graph TB
+    %% == MODELO ==
+    Producto["<b>Producto</b><br/>---<br/>id: String<br/>nombre: String<br/>precio: double<br/>categoria: String<br/>impuesto: double<br/>stock: int"]
 
-    class Cliente {
-        -String nit
-        -String nombre
-        -String email
-        -String telefono
-        -LocalDateTime fecha_registro
-    }
+    Cliente["<b>Cliente</b><br/>---<br/>nit: String<br/>nombre: String<br/>email: String<br/>telefono: String"]
 
-    class Cajero {
-        -String id_cajero
-        -String nombre
-        -String turno
-        -String contrasena_hash
-    }
+    Cajero["<b>Cajero</b><br/>---<br/>id_cajero: String<br/>nombre: String<br/>turno: String<br/>contrasena_hash: String"]
 
-    class EstadoFactura {
-        <<enumeration>>
-        PENDIENTE
-        PAGADA
-        ANULADA
-    }
+    ItemFactura["<b>ItemFactura</b><br/>---<br/>producto: Producto<br/>cantidad: int<br/>precioUnitario: double<br/>getTotal()"]
 
-    class ItemFactura {
-        -Producto producto
-        -int cantidad
-        -double precioUnitario
-        +getSubtotal() double
-        +getImpuesto() double
-        +getTotal() double
-    }
+    Factura["<b>Factura</b><br/>---<br/>numero: String<br/>fecha: LocalDateTime<br/>cliente: Cliente<br/>cajero: Cajero<br/>items: List<br/>estado: Estado<br/>calcularTotal()"]
 
-    class Factura {
-        -String numero
-        -LocalDateTime fecha
-        -Cliente cliente
-        -Cajero cajero
-        -List~ItemFactura~ items
-        -EstadoFactura estado
-        -String metodoPago
-        +agregarItem(ItemFactura)
-        +calcularSubtotal() double
-        +calcularIva() double
-        +calcularTotal() double
-        +marcarPagada()
-        +anular()
-    }
+    Estado["<b>EstadoFactura</b><br/>---<br/>PENDIENTE<br/>PAGADA<br/>ANULADA"]
 
-    %% Pago
-    class MetodoPago {
-        <<interface>>
-        +procesar(double) void
-        +validar() boolean
-    }
+    %% == PAGOS ==
+    MetodoPago["<b>MetodoPago</b><br/>interface<br/>---<br/>procesar()"]
 
-    class PagoEfectivo {
-        -double monto
-        +procesar(double) void
-        +calcularCambio() double
-    }
+    PagoEfectivo["<b>PagoEfectivo</b><br/>implements MetodoPago<br/>---<br/>monto: double<br/>calcularCambio()"]
 
-    class PagoTarjeta {
-        -String numeroTarjeta
-        -String tipo
-        +procesar(double) void
-        +validar() boolean
-    }
+    PagoTarjeta["<b>PagoTarjeta</b><br/>implements MetodoPago<br/>---<br/>numeroTarjeta: String<br/>tipo: String"]
 
-    %% DAO
-    class FacturaDAO {
-        +registrar(Factura) void
-        +obtener(String) Factura
-        +listar() List
-        +anular(String) void
-    }
+    %% == DAO ==
+    FacturaDAO["<b>FacturaDAO</b><br/>---<br/>registrar()<br/>obtener()<br/>anular()"]
 
-    class ClienteDAO {
-        +registrar(Cliente) void
-        +obtener(String) Cliente
-        +existe(String) boolean
-        +listar() List
-    }
+    ClienteDAO["<b>ClienteDAO</b><br/>---<br/>registrar()<br/>obtener()"]
 
-    class CajeroDAO {
-        +validarLogin(String, String) Cajero
-        +obtener(String) Cajero
-    }
+    CajeroDAO["<b>CajeroDAO</b><br/>---<br/>validarLogin()"]
 
-    %% Servicio
-    class SistemaFacturacion {
-        -Inventario inventario
-        -FacturaDAO facturaDAO
-        +crearFactura() Factura
-        +agregarProducto(Factura, Producto, int)
-        +cobrar(Factura, MetodoPago)
-        +anularFactura(String)
-    }
+    %% == SERVICIOS ==
+    SistemaFacturacion["<b>SistemaFacturacion</b><br/>Singleton<br/>---<br/>crearFactura()<br/>cobrar()"]
 
-    class Inventario {
-        +cargarProductos() List
-        +actualizarStock(String, int)
-        +obtenerProducto(String) Producto
-    }
+    Inventario["<b>Inventario</b><br/>---<br/>cargarProductos()<br/>actualizarStock()"]
 
-    %% Reporte
-    class GeneradorReportePDF {
-        +generarFactura(Factura) void
-        +generarVentasDia(LocalDate) void
-        +generarTopProductos(LocalDate, LocalDate) void
-        +generarVentasCajero(LocalDate, LocalDate) void
-    }
+    %% == REPORTES ==
+    GeneradorPDF["<b>GeneradorReportePDF</b><br/>---<br/>generarFactura()<br/>generarVentasDia()"]
 
-    %% Relaciones
-    Factura --> Cliente : contiene
-    Factura --> Cajero : registrada por
-    Factura --> EstadoFactura : tiene estado
-    Factura --> ItemFactura : contiene items
-    ItemFactura --> Producto : referencia
+    %% == RELACIONES ==
+    Factura -->|"contiene"| ItemFactura
+    ItemFactura -->|"referencia"| Producto
+    Factura -->|"registrada por"| Cajero
+    Factura -->|"para cliente"| Cliente
+    Factura -->|"estado"| Estado
 
-    MetodoPago <|.. PagoEfectivo : implementa
-    MetodoPago <|.. PagoTarjeta : implementa
+    PagoEfectivo -->|"implements"| MetodoPago
+    PagoTarjeta -->|"implements"| MetodoPago
 
-    FacturaDAO --> Factura : gestiona
-    ClienteDAO --> Cliente : gestiona
-    CajeroDAO --> Cajero : gestiona
+    FacturaDAO -->|"gestiona"| Factura
+    ClienteDAO -->|"gestiona"| Cliente
+    CajeroDAO -->|"gestiona"| Cajero
 
-    SistemaFacturacion --> Inventario : usa
-    SistemaFacturacion --> FacturaDAO : usa
-    SistemaFacturacion --> Factura : crea
+    SistemaFacturacion -->|"usa"| Inventario
+    SistemaFacturacion -->|"usa"| FacturaDAO
+    SistemaFacturacion -->|"crea"| Factura
 
-    GeneradorReportePDF --> Factura : genera reportes
+    GeneradorPDF -->|"genera"| Factura
+    Inventario -->|"maneja"| Producto
 
-    Inventario --> Producto : maneja stock
-
-    style Producto fill:#e1f5ff
-    style Cliente fill:#e1f5ff
-    style Cajero fill:#e1f5ff
-    style Factura fill:#fff3e0
-    style ItemFactura fill:#fff3e0
-    style EstadoFactura fill:#f3e5f5
-    style MetodoPago fill:#e8f5e9
-    style PagoEfectivo fill:#e8f5e9
-    style PagoTarjeta fill:#e8f5e9
-    style FacturaDAO fill:#fce4ec
-    style ClienteDAO fill:#fce4ec
-    style CajeroDAO fill:#fce4ec
-    style SistemaFacturacion fill:#fff9c4
-    style Inventario fill:#fff9c4
-    style GeneradorReportePDF fill:#f1f8e9
+    %% == ESTILOS ==
+    style Producto fill:#87CEEB
+    style Cliente fill:#87CEEB
+    style Cajero fill:#87CEEB
+    style ItemFactura fill:#FFE4B5
+    style Factura fill:#FFE4B5
+    style Estado fill:#DDA0DD
+    style MetodoPago fill:#90EE90
+    style PagoEfectivo fill:#90EE90
+    style PagoTarjeta fill:#90EE90
+    style FacturaDAO fill:#FFB6C1
+    style ClienteDAO fill:#FFB6C1
+    style CajeroDAO fill:#FFB6C1
+    style SistemaFacturacion fill:#FFFFE0
+    style Inventario fill:#FFFFE0
+    style GeneradorPDF fill:#F0FFF0
 ```
 
 ---
@@ -306,6 +224,7 @@ classDiagram
 ## FUNCIONALIDADES
 
 ### Modulo de Ventas (POS)
+
 - Buscar productos por nombre o codigo
 - Agregar al carrito con cantidad
 - Doble clic en producto = agregar rapido
@@ -314,12 +233,14 @@ classDiagram
 - Genera PDF de la factura automaticamente al cobrar
 
 ### Reportes PDF (carpeta `reportes/`)
+
 - **Factura individual:** `reportes/facturas/FAC-XXXXX.pdf`
 - **Ventas del dia:** `reportes/ventas_YYYY-MM-DD.pdf`
 - **Top 20 productos:** `reportes/top_productos_DESDE_HASTA.pdf`
 - **Ventas por cajero:** `reportes/ventas_cajero_DESDE_HASTA.pdf`
 
 ### Gestion
+
 - Inventario con stock en tiempo real
 - Registro y busqueda de clientes por NIT
 - Anulacion de facturas con registro en BD
