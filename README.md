@@ -133,6 +133,176 @@ supermercado/
 
 ---
 
+## DIAGRAMA UML - CLASES Y RELACIONES
+
+```mermaid
+classDiagram
+    %% Modelo
+    class Producto {
+        -String id
+        -String nombre
+        -double precio
+        -String categoria
+        -double impuesto
+        -int stock
+        -boolean activo
+        +getPrecioConIva() double
+        +setStock(int)
+        +setPrecio(double)
+    }
+
+    class Cliente {
+        -String nit
+        -String nombre
+        -String email
+        -String telefono
+        -LocalDateTime fecha_registro
+    }
+
+    class Cajero {
+        -String id_cajero
+        -String nombre
+        -String turno
+        -String contrasena_hash
+    }
+
+    class EstadoFactura {
+        <<enumeration>>
+        PENDIENTE
+        PAGADA
+        ANULADA
+    }
+
+    class ItemFactura {
+        -Producto producto
+        -int cantidad
+        -double precioUnitario
+        +getSubtotal() double
+        +getImpuesto() double
+        +getTotal() double
+    }
+
+    class Factura {
+        -String numero
+        -LocalDateTime fecha
+        -Cliente cliente
+        -Cajero cajero
+        -List~ItemFactura~ items
+        -EstadoFactura estado
+        -String metodoPago
+        +agregarItem(ItemFactura)
+        +calcularSubtotal() double
+        +calcularIva() double
+        +calcularTotal() double
+        +marcarPagada()
+        +anular()
+    }
+
+    %% Pago
+    class MetodoPago {
+        <<interface>>
+        +procesar(double) void
+        +validar() boolean
+    }
+
+    class PagoEfectivo {
+        -double monto
+        +procesar(double) void
+        +calcularCambio() double
+    }
+
+    class PagoTarjeta {
+        -String numeroTarjeta
+        -String tipo
+        +procesar(double) void
+        +validar() boolean
+    }
+
+    %% DAO
+    class FacturaDAO {
+        +registrar(Factura) void
+        +obtener(String) Factura
+        +listar() List
+        +anular(String) void
+    }
+
+    class ClienteDAO {
+        +registrar(Cliente) void
+        +obtener(String) Cliente
+        +existe(String) boolean
+        +listar() List
+    }
+
+    class CajeroDAO {
+        +validarLogin(String, String) Cajero
+        +obtener(String) Cajero
+    }
+
+    %% Servicio
+    class SistemaFacturacion {
+        -Inventario inventario
+        -FacturaDAO facturaDAO
+        +crearFactura() Factura
+        +agregarProducto(Factura, Producto, int)
+        +cobrar(Factura, MetodoPago)
+        +anularFactura(String)
+    }
+
+    class Inventario {
+        +cargarProductos() List
+        +actualizarStock(String, int)
+        +obtenerProducto(String) Producto
+    }
+
+    %% Reporte
+    class GeneradorReportePDF {
+        +generarFactura(Factura) void
+        +generarVentasDia(LocalDate) void
+        +generarTopProductos(LocalDate, LocalDate) void
+        +generarVentasCajero(LocalDate, LocalDate) void
+    }
+
+    %% Relaciones
+    Factura --> Cliente : contiene
+    Factura --> Cajero : registrada por
+    Factura --> EstadoFactura : tiene estado
+    Factura --> ItemFactura : contiene items
+    ItemFactura --> Producto : referencia
+
+    MetodoPago <|.. PagoEfectivo : implementa
+    MetodoPago <|.. PagoTarjeta : implementa
+
+    FacturaDAO --> Factura : gestiona
+    ClienteDAO --> Cliente : gestiona
+    CajeroDAO --> Cajero : gestiona
+
+    SistemaFacturacion --> Inventario : usa
+    SistemaFacturacion --> FacturaDAO : usa
+    SistemaFacturacion --> Factura : crea
+
+    GeneradorReportePDF --> Factura : genera reportes
+
+    Inventario --> Producto : maneja stock
+
+    style Producto fill:#e1f5ff
+    style Cliente fill:#e1f5ff
+    style Cajero fill:#e1f5ff
+    style Factura fill:#fff3e0
+    style ItemFactura fill:#fff3e0
+    style EstadoFactura fill:#f3e5f5
+    style MetodoPago fill:#e8f5e9
+    style PagoEfectivo fill:#e8f5e9
+    style PagoTarjeta fill:#e8f5e9
+    style FacturaDAO fill:#fce4ec
+    style ClienteDAO fill:#fce4ec
+    style CajeroDAO fill:#fce4ec
+    style SistemaFacturacion fill:#fff9c4
+    style Inventario fill:#fff9c4
+    style GeneradorReportePDF fill:#f1f8e9
+```
+
+---
+
 ## FUNCIONALIDADES
 
 ### Modulo de Ventas (POS)
