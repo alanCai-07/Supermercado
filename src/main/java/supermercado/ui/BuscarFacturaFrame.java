@@ -1,7 +1,5 @@
 package supermercado.ui;
 
-import supermercado.modelo.EstadoFactura;
-import supermercado.reporte.GeneradorReportePDF;
 import supermercado.servicio.SistemaFacturacion;
 
 import javax.swing.*;

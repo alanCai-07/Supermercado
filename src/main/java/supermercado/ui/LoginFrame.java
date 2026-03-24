@@ -4,7 +4,6 @@ import supermercado.servicio.SistemaFacturacion;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class LoginFrame extends JFrame {
 

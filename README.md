@@ -1,4 +1,5 @@
 # Sistema de Facturacion Electronica - Supermercado
+
 ### Guia de instalacion y ejecucion en VS Code
 
 ---
@@ -7,15 +8,16 @@
 
 Instala estas herramientas antes de comenzar:
 
-| Herramienta | Version | Descarga |
-|-------------|---------|----------|
-| Java JDK    | 17 o superior | https://adoptium.net |
-| Maven       | 3.8+    | https://maven.apache.org/download.cgi |
-| MySQL       | 8.0+    | https://dev.mysql.com/downloads/installer |
-| VS Code     | Ultima  | https://code.visualstudio.com |
+| Herramienta | Version       | Descarga                                  |
+| ----------- | ------------- | ----------------------------------------- |
+| Java JDK    | 17 o superior | https://adoptium.net                      |
+| Maven       | 3.8+          | https://maven.apache.org/download.cgi     |
+| MySQL       | 8.0+          | https://dev.mysql.com/downloads/installer |
+| VS Code     | Ultima        | https://code.visualstudio.com             |
 
 **Extensiones de VS Code necesarias:**
-- Extension Pack for Java (Microsoft)  →  busca en Extensions: `vscjava.vscode-java-pack`
+
+- Extension Pack for Java (Microsoft) → busca en Extensions: `vscjava.vscode-java-pack`
 
 ---
 
@@ -30,6 +32,7 @@ mysql -u root -p < setup.sql
 O copia y pega el contenido de `setup.sql` en MySQL Workbench y ejecutalo.
 
 Esto crea:
+
 - La base de datos `supermercado_db`
 - Las 6 tablas con sus relaciones
 - 12 productos de prueba
@@ -38,7 +41,7 @@ Esto crea:
 **Cajeros de prueba:**
 
 | ID   | Nombre        | Contrasena |
-|------|---------------|------------|
+| ---- | ------------- | ---------- |
 | C001 | Administrador | admin123   |
 | C002 | Caja 2        | 1234       |
 
@@ -47,11 +50,13 @@ Esto crea:
 ## PASO 2 — Configurar la conexion en el codigo
 
 Abre el archivo:
+
 ```
 src/main/java/supermercado/db/ConexionDB.java
 ```
 
 Edita estas 3 lineas con tus datos de MySQL:
+
 ```java
 private static final String URL      = "jdbc:mysql://localhost:3306/supermercado_db...";
 private static final String USUARIO  = "root";         // tu usuario MySQL
@@ -73,10 +78,12 @@ private static final String PASSWORD = "tu_password";  // tu contrasena MySQL
 ## PASO 4 — Ejecutar el programa
 
 **Opcion A — Desde VS Code:**
+
 - Abre `src/main/java/supermercado/Main.java`
 - Clic en el boton **Run** (▶) que aparece sobre el metodo `main`
 
 **Opcion B — Desde la terminal:**
+
 ```bash
 # En la carpeta raiz del proyecto:
 mvn compile
@@ -84,6 +91,7 @@ mvn exec:java -Dexec.mainClass="supermercado.Main"
 ```
 
 **Opcion C — Con el debugger:**
+
 - Presiona `F5` (usa la configuracion en `.vscode/launch.json`)
 
 ---
@@ -133,9 +141,90 @@ supermercado/
 
 ---
 
+## DIAGRAMA UML - CLASES Y RELACIONES
+
+```mermaid
+graph TB
+    %% == MODELO ==
+    Producto["<b>Producto</b><br/>---<br/>id: String<br/>nombre: String<br/>precio: double<br/>categoria: String<br/>impuesto: double<br/>stock: int"]
+
+    Cliente["<b>Cliente</b><br/>---<br/>nit: String<br/>nombre: String<br/>email: String<br/>telefono: String"]
+
+    Cajero["<b>Cajero</b><br/>---<br/>id_cajero: String<br/>nombre: String<br/>turno: String<br/>contrasena_hash: String"]
+
+    ItemFactura["<b>ItemFactura</b><br/>---<br/>producto: Producto<br/>cantidad: int<br/>precioUnitario: double<br/>getTotal()"]
+
+    Factura["<b>Factura</b><br/>---<br/>numero: String<br/>fecha: LocalDateTime<br/>cliente: Cliente<br/>cajero: Cajero<br/>items: List<br/>estado: Estado<br/>calcularTotal()"]
+
+    Estado["<b>EstadoFactura</b><br/>---<br/>PENDIENTE<br/>PAGADA<br/>ANULADA"]
+
+    %% == PAGOS ==
+    MetodoPago["<b>MetodoPago</b><br/>interface<br/>---<br/>procesar()"]
+
+    PagoEfectivo["<b>PagoEfectivo</b><br/>implements MetodoPago<br/>---<br/>monto: double<br/>calcularCambio()"]
+
+    PagoTarjeta["<b>PagoTarjeta</b><br/>implements MetodoPago<br/>---<br/>numeroTarjeta: String<br/>tipo: String"]
+
+    %% == DAO ==
+    FacturaDAO["<b>FacturaDAO</b><br/>---<br/>registrar()<br/>obtener()<br/>anular()"]
+
+    ClienteDAO["<b>ClienteDAO</b><br/>---<br/>registrar()<br/>obtener()"]
+
+    CajeroDAO["<b>CajeroDAO</b><br/>---<br/>validarLogin()"]
+
+    %% == SERVICIOS ==
+    SistemaFacturacion["<b>SistemaFacturacion</b><br/>Singleton<br/>---<br/>crearFactura()<br/>cobrar()"]
+
+    Inventario["<b>Inventario</b><br/>---<br/>cargarProductos()<br/>actualizarStock()"]
+
+    %% == REPORTES ==
+    GeneradorPDF["<b>GeneradorReportePDF</b><br/>---<br/>generarFactura()<br/>generarVentasDia()"]
+
+    %% == RELACIONES ==
+    Factura -->|"contiene"| ItemFactura
+    ItemFactura -->|"referencia"| Producto
+    Factura -->|"registrada por"| Cajero
+    Factura -->|"para cliente"| Cliente
+    Factura -->|"estado"| Estado
+
+    PagoEfectivo -->|"implements"| MetodoPago
+    PagoTarjeta -->|"implements"| MetodoPago
+
+    FacturaDAO -->|"gestiona"| Factura
+    ClienteDAO -->|"gestiona"| Cliente
+    CajeroDAO -->|"gestiona"| Cajero
+
+    SistemaFacturacion -->|"usa"| Inventario
+    SistemaFacturacion -->|"usa"| FacturaDAO
+    SistemaFacturacion -->|"crea"| Factura
+
+    GeneradorPDF -->|"genera"| Factura
+    Inventario -->|"maneja"| Producto
+
+    %% == ESTILOS NEUTROS ==
+    style Producto fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+    style Cliente fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+    style Cajero fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+    style ItemFactura fill:#F0F0F0,stroke:#444444,stroke-width:2px,color:#000000
+    style Factura fill:#F0F0F0,stroke:#444444,stroke-width:2px,color:#000000
+    style Estado fill:#E8E8E8,stroke:#333333,stroke-width:2px,color:#000000
+    style MetodoPago fill:#DADADA,stroke:#333333,stroke-width:2px,color:#000000
+    style PagoEfectivo fill:#DADADA,stroke:#333333,stroke-width:2px,color:#000000
+    style PagoTarjeta fill:#DADADA,stroke:#333333,stroke-width:2px,color:#000000
+    style FacturaDAO fill:#F2F2F2,stroke:#454545,stroke-width:2px,color:#000000
+    style ClienteDAO fill:#F2F2F2,stroke:#454545,stroke-width:2px,color:#000000
+    style CajeroDAO fill:#F2F2F2,stroke:#454545,stroke-width:2px,color:#000000
+    style SistemaFacturacion fill:#ECECEC,stroke:#333333,stroke-width:2px,color:#000000
+    style Inventario fill:#ECECEC,stroke:#333333,stroke-width:2px,color:#000000
+    style GeneradorPDF fill:#E6E6E6,stroke:#333333,stroke-width:2px,color:#000000
+```
+
+---
+
 ## FUNCIONALIDADES
 
 ### Modulo de Ventas (POS)
+
 - Buscar productos por nombre o codigo
 - Agregar al carrito con cantidad
 - Doble clic en producto = agregar rapido
@@ -144,12 +233,14 @@ supermercado/
 - Genera PDF de la factura automaticamente al cobrar
 
 ### Reportes PDF (carpeta `reportes/`)
+
 - **Factura individual:** `reportes/facturas/FAC-XXXXX.pdf`
 - **Ventas del dia:** `reportes/ventas_YYYY-MM-DD.pdf`
 - **Top 20 productos:** `reportes/top_productos_DESDE_HASTA.pdf`
 - **Ventas por cajero:** `reportes/ventas_cajero_DESDE_HASTA.pdf`
 
 ### Gestion
+
 - Inventario con stock en tiempo real
 - Registro y busqueda de clientes por NIT
 - Anulacion de facturas con registro en BD
