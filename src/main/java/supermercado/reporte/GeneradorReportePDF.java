@@ -13,6 +13,7 @@ import supermercado.modelo.Factura;
 import supermercado.modelo.ItemFactura;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,6 +25,7 @@ public class GeneradorReportePDF {
 
     // Colores corporativos
     private static final DeviceRgb COLOR_HEADER  = new DeviceRgb(34, 85, 153);   // azul oscuro
+    private static final DeviceRgb COLOR_SUBHEAD = new DeviceRgb(70, 130, 180);  // azul medio
     private static final DeviceRgb COLOR_ROW_PAR = new DeviceRgb(235, 242, 250); // azul muy claro
     private static final DeviceRgb COLOR_TOTAL   = new DeviceRgb(220, 235, 255); // azul pastel
     private static final DeviceRgb COLOR_TEXT_H  = new DeviceRgb(255, 255, 255); // blanco
@@ -386,14 +388,21 @@ public class GeneradorReportePDF {
      */
     public static String generarFacturaTermica(Factura factura) throws Exception {
         String ruta = "reportes/facturas/TERMICA_" + factura.getNumero() + ".pdf";
-        crearDirectorio(ruta);
+
+        // Crear directorio explicitamente y verificar
+        File dir = new File("reportes/facturas");
+        if (!dir.exists()) {
+            boolean creado = dir.mkdirs();
+            System.out.println("[TERMICA] Directorio creado: " + creado + " -> " + dir.getAbsolutePath());
+        }
+
+        System.out.println("[TERMICA] Generando ticket en: " + new File(ruta).getAbsolutePath());
 
         int numItems = factura.getItems().size();
+        if (numItems == 0) throw new Exception("La factura no tiene items.");
 
-        // Calcular altura dinamica del ticket en puntos:
-        // Encabezado ~140pt + linea por item ~26pt + totales ~80pt + pie ~60pt
+        // Calcular altura dinamica del ticket en puntos
         float alturaTicket = 155 + (numItems * 28f) + 100 + 70;
-
         PageSize tamanoTermica = new PageSize(MM80, alturaTicket);
 
         PdfWriter   writer = new PdfWriter(ruta);
@@ -401,7 +410,7 @@ public class GeneradorReportePDF {
         Document    doc    = new Document(pdf, tamanoTermica);
         doc.setMargins(MAR_V, MAR_H, MAR_V, MAR_H);
 
-        float anchoUtil = MM80 - (MAR_H * 2); // ancho util en puntos
+        float anchoUtil = MM80 - (MAR_H * 2);
 
         // ---- FUENTE MONOESPACIADA para alineacion perfecta ----
         // iText incluye Courier por defecto (ideal para termicas)

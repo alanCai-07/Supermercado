@@ -10,7 +10,9 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.Desktop;
 import java.awt.event.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,11 +104,11 @@ public class NuevaVentaFrame extends JFrame {
         JPanel izq = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
         izq.setBackground(new Color(240, 246, 255));
 
-        JLabel lblNit = new JLabel("NIT / CC:");
+        JLabel lblNit = new JLabel("NIT o Nombre:");
         lblNit.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        txtNitBuscar = new JTextField(12);
+        txtNitBuscar = new JTextField(16);
         LoginFrame.estilizarCampo(txtNitBuscar);
-        txtNitBuscar.setToolTipText("Ingrese el NIT o CC del cliente y presione Buscar");
+        txtNitBuscar.setToolTipText("Ingrese el NIT/CC (numeros) o el nombre del cliente y presione Buscar");
 
         btnBuscarCliente   = new JButton("Buscar cliente");
         btnNuevoCliente    = new JButton("+ Nuevo cliente");
@@ -342,34 +344,132 @@ public class NuevaVentaFrame extends JFrame {
     //  LOGICA DE CLIENTE
     // =========================================================
 
-    /** Busca cliente por NIT y lo asigna a la factura. */
+    /** Busca cliente por NIT o por nombre y lo asigna a la factura. */
     private void buscarCliente() {
-        String nit = txtNitBuscar.getText().trim();
-        if (nit.isEmpty()) {
+        String texto = txtNitBuscar.getText().trim();
+        if (texto.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Ingrese el NIT o cedula del cliente.", "Aviso",
-                    JOptionPane.WARNING_MESSAGE);
+                    "Ingrese el NIT, cedula o nombre del cliente.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
         try {
-            Cliente c = clienteDAO.buscar(nit);
-            if (c != null) {
-                asignarCliente(c);
-            } else {
+            java.util.List<Cliente> resultados = clienteDAO.buscarInteligente(texto);
+
+            if (resultados.isEmpty()) {
+                // No se encontro nada
+                String msg = texto.matches("\\d+")
+                        ? "No existe cliente con NIT: " + texto
+                        : "No existe cliente con nombre: \"" + texto + "\"";
                 int resp = JOptionPane.showConfirmDialog(this,
-                        "No se encontro un cliente con NIT: " + nit +
-                        "\n\n¿Desea registrarlo como cliente nuevo?",
+                        msg + "\n\n¿Desea registrarlo como cliente nuevo?",
                         "Cliente no encontrado",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
                 if (resp == JOptionPane.YES_OPTION)
-                    abrirDialogoNuevoCliente(nit);
+                    abrirDialogoNuevoCliente(texto.matches("\\d+") ? texto : "");
+
+            } else if (resultados.size() == 1) {
+                // Resultado unico: asignar directamente
+                asignarCliente(resultados.get(0));
+
+            } else {
+                // Multiples resultados: mostrar dialogo de seleccion
+                Cliente seleccionado = mostrarDialogoSeleccion(resultados);
+                if (seleccionado != null) asignarCliente(seleccionado);
             }
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error al buscar cliente: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    /**
+     * Muestra una ventana con la lista de clientes encontrados
+     * para que el cajero elija el correcto.
+     */
+    private Cliente mostrarDialogoSeleccion(java.util.List<Cliente> clientes) {
+        JDialog dlg = new JDialog(this, "Seleccionar cliente", true);
+        dlg.setSize(560, 340);
+        dlg.setLocationRelativeTo(this);
+        dlg.setResizable(false);
+
+        JPanel panel = new JPanel(new BorderLayout(8, 8));
+        panel.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
+        panel.setBackground(Color.WHITE);
+
+        JLabel lbl = new JLabel("Se encontraron " + clientes.size() +
+                " clientes. Seleccione el correcto y haga doble clic o presione Elegir:");
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        panel.add(lbl, BorderLayout.NORTH);
+
+        // Tabla de resultados
+        String[] cols = {"NIT / CC", "Nombre", "Telefono", "Email"};
+        DefaultTableModel modelo = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+        for (Cliente c : clientes)
+            modelo.addRow(new Object[]{
+                c.getNit(), c.getNombre(), c.getTelefono(), c.getEmail()});
+
+        JTable tabla = new JTable(modelo);
+        tabla.setRowHeight(26);
+        tabla.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabla.getColumnModel().getColumn(0).setPreferredWidth(90);
+        tabla.getColumnModel().getColumn(1).setPreferredWidth(200);
+        tabla.getColumnModel().getColumn(2).setPreferredWidth(100);
+        tabla.getColumnModel().getColumn(3).setPreferredWidth(150);
+        tabla.setRowSelectionInterval(0, 0); // seleccionar el primero por defecto
+        panel.add(new JScrollPane(tabla), BorderLayout.CENTER);
+
+        // Botones
+        JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        btnPanel.setBackground(Color.WHITE);
+        JButton btnElegir   = new JButton("Elegir");
+        JButton btnCancelar = new JButton("Cancelar");
+        LoginFrame.estilizarBoton(btnElegir,   new Color(34, 85, 153));
+        LoginFrame.estilizarBoton(btnCancelar, new Color(120, 120, 120));
+        btnElegir  .setPreferredSize(new Dimension(100, 34));
+        btnCancelar.setPreferredSize(new Dimension(100, 34));
+        btnPanel.add(btnCancelar);
+        btnPanel.add(btnElegir);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+        dlg.add(panel);
+
+        // Resultado seleccionado
+        final Cliente[] resultado = {null};
+
+        Runnable elegir = () -> {
+            int fila = tabla.getSelectedRow();
+            if (fila >= 0) {
+                resultado[0] = clientes.get(fila);
+                dlg.dispose();
+            }
+        };
+
+        btnElegir.addActionListener(e -> elegir.run());
+        btnCancelar.addActionListener(e -> dlg.dispose());
+
+        // Doble clic en la tabla tambien selecciona
+        tabla.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) elegir.run();
+            }
+        });
+
+        // Enter en la tabla confirma
+        tabla.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) elegir.run();
+            }
+        });
+
+        dlg.setVisible(true);
+        return resultado[0];
     }
 
     /** Asigna el cliente "Consumidor Final" por defecto. */
@@ -644,48 +744,107 @@ public class NuevaVentaFrame extends JFrame {
             }
             @Override protected void done() {
                 try {
-                    if (get()) {
-                        // Generar los DOS formatos de PDF
-                        String rutaNormal  = GeneradorReportePDF.generarFacturaPDF(facturaActual);
-                        String rutaTermica = GeneradorReportePDF.generarFacturaTermica(facturaActual);
-
-                        String cambioTxt = (pago instanceof PagoEfectivo pe)
-                                ? "\nCambio: $" + String.format("%,.0f", pe.getCambio()) : "";
-
-                        // Preguntar que PDF abrir
-                        String[] opciones = {"Ticket termico (80mm)", "Factura normal", "No abrir"};
-                        int resp = JOptionPane.showOptionDialog(NuevaVentaFrame.this,
-                                "Factura " + facturaActual.getNumero() + " registrada.\n" +
-                                "Cliente: " + clienteActual.getNombre() + cambioTxt +
-                                "\n\n¿Que documento desea imprimir?",
-                                "Venta completada",
-                                JOptionPane.DEFAULT_OPTION,
-                                JOptionPane.INFORMATION_MESSAGE,
-                                null, opciones, opciones[0]);
-
-                        if (resp == 0) Desktop.getDesktop().open(new java.io.File(rutaTermica));
-                        else if (resp == 1) Desktop.getDesktop().open(new java.io.File(rutaNormal));
-
-                        int otraVenta = JOptionPane.showConfirmDialog(NuevaVentaFrame.this,
-                                "¿Desea realizar otra venta?",
-                                "Nueva venta",
-                                JOptionPane.YES_NO_OPTION);
-                        dispose();
-                        if (otraVenta == JOptionPane.YES_OPTION)
-                            new NuevaVentaFrame(parent).setVisible(true);
-
-                    } else {
+                    if (!get()) {
                         JOptionPane.showMessageDialog(NuevaVentaFrame.this,
                                 "Pago rechazado. Verifique el monto.",
                                 "Pago fallido", JOptionPane.ERROR_MESSAGE);
                         btnCobrar.setEnabled(true);
+                        return;
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(NuevaVentaFrame.this,
-                            "Error al procesar: " + ex.getMessage(),
+                            "Error al procesar el pago: " + ex.getMessage(),
                             "Error", JOptionPane.ERROR_MESSAGE);
                     btnCobrar.setEnabled(true);
+                    return;
                 }
+
+                // ---- Pago exitoso: generar PDFs de forma independiente ----
+                String rutaNormal  = null;
+                String rutaTermica = null;
+
+                // PDF normal (A4 con colores)
+                try {
+                    rutaNormal = GeneradorReportePDF.generarFacturaPDF(facturaActual);
+                    System.out.println("[PDF] Factura normal generada: " + rutaNormal);
+                } catch (Exception ex) {
+                    System.err.println("[PDF] Error factura normal: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(NuevaVentaFrame.this,
+                            "Advertencia: No se pudo generar la factura normal.\n" + ex.getMessage(),
+                            "PDF", JOptionPane.WARNING_MESSAGE);
+                }
+
+                // PDF termico (80mm)
+                try {
+                    rutaTermica = GeneradorReportePDF.generarFacturaTermica(facturaActual);
+                    System.out.println("[PDF] Ticket termico generado: " + rutaTermica);
+                } catch (Exception ex) {
+                    System.err.println("[PDF] Error ticket termico: " + ex.getMessage());
+                    JOptionPane.showMessageDialog(NuevaVentaFrame.this,
+                            "Advertencia: No se pudo generar el ticket termico.\n" + ex.getMessage(),
+                            "PDF Termico", JOptionPane.WARNING_MESSAGE);
+                }
+
+                // ---- Dialogo de impresion ----
+                String cambioTxt = (pago instanceof PagoEfectivo pe)
+                        ? "\nCambio: $" + String.format("%,.0f", pe.getCambio()) : "";
+
+                String msgFacturas = "";
+                if (rutaNormal  != null) msgFacturas += "\nFactura A4:  " + rutaNormal;
+                if (rutaTermica != null) msgFacturas += "\nTicket 80mm: " + rutaTermica;
+
+                // Solo mostrar opciones de apertura para los PDFs que se generaron
+                boolean hayNormal  = rutaNormal  != null && new File(rutaNormal).exists();
+                boolean hayTermica = rutaTermica != null && new File(rutaTermica).exists();
+
+                if (hayNormal || hayTermica) {
+                    // Construir opciones dinamicamente segun los PDFs disponibles
+                    java.util.List<String> opsList = new java.util.ArrayList<>();
+                    if (hayTermica) opsList.add("Ticket termico (80mm)");
+                    if (hayNormal)  opsList.add("Factura normal (A4)");
+                    opsList.add("No imprimir");
+                    String[] opciones = opsList.toArray(new String[0]);
+
+                    int resp = JOptionPane.showOptionDialog(NuevaVentaFrame.this,
+                            "Factura " + facturaActual.getNumero() + " registrada correctamente.\n" +
+                            "Cliente: " + clienteActual.getNombre() + cambioTxt + msgFacturas +
+                            "\n\n¿Que documento desea abrir para imprimir?",
+                            "Venta completada",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE,
+                            null, opciones, opciones[0]);
+
+                    try {
+                        if (hayTermica && hayNormal) {
+                            // Ambos disponibles
+                            if (resp == 0 && hayTermica)
+                                Desktop.getDesktop().open(new File(rutaTermica));
+                            else if (resp == 1 && hayNormal)
+                                Desktop.getDesktop().open(new File(rutaNormal));
+                        } else if (hayTermica) {
+                            if (resp == 0) Desktop.getDesktop().open(new File(rutaTermica));
+                        } else if (hayNormal) {
+                            if (resp == 0) Desktop.getDesktop().open(new File(rutaNormal));
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(NuevaVentaFrame.this,
+                                "No se pudo abrir el PDF: " + ex.getMessage(),
+                                "Aviso", JOptionPane.WARNING_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(NuevaVentaFrame.this,
+                            "Factura " + facturaActual.getNumero() + " registrada.\n" +
+                            "Cliente: " + clienteActual.getNombre() + cambioTxt +
+                            "\n\nNo se pudieron generar los PDFs.",
+                            "Venta completada", JOptionPane.INFORMATION_MESSAGE);
+                }
+
+                int otraVenta = JOptionPane.showConfirmDialog(NuevaVentaFrame.this,
+                        "¿Desea realizar otra venta?",
+                        "Nueva venta", JOptionPane.YES_NO_OPTION);
+                dispose();
+                if (otraVenta == JOptionPane.YES_OPTION)
+                    new NuevaVentaFrame(parent).setVisible(true);
             }
         };
         worker.execute();
