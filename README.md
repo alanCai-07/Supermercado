@@ -44,6 +44,7 @@ Esto crea:
 | ---- | ------------- | ---------- |
 | C001 | Administrador | admin123   |
 | C002 | Caja 2        | 1234       |
+| C003 | Caja 3        | Caja3      |    
 
 ---
 

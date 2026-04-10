@@ -23,10 +23,10 @@ public class Main {
                 ConexionDB.getConexion();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(null,
-                        "No se pudo conectar a MySQL.\n\n" +
+                        "No se pudo conectar a PostgreSQL.\n\n" +
                         "Verifique que:\n" +
-                        "  1. MySQL este corriendo en localhost:3306\n" +
-                        "  2. La base de datos 'supermercado_db' exista\n" +
+                        "  1. PostgreSQL este corriendo en localhost:5432\n" +
+                        "  2. La base de datos 'neondb' exista\n" +
                         "  3. El usuario y password en ConexionDB.java sean correctos\n\n" +
                         "Error: " + e.getMessage(),
                         "Error de conexion", JOptionPane.ERROR_MESSAGE);

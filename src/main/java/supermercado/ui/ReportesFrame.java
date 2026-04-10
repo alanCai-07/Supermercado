@@ -19,9 +19,10 @@ public class ReportesFrame extends JFrame {
         setTitle("Generar Reportes PDF");
         setSize(520, 420);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
         setResizable(false);
         construirUI();
+        // Centrar en la pantalla DESPUÉS de establecer el tamaño
+        setLocationRelativeTo(null);
     }
 
     private void construirUI() {
@@ -58,9 +59,9 @@ public class ReportesFrame extends JFrame {
         JPanel panelBotones = new JPanel(new GridLayout(4, 1, 0, 10));
         panelBotones.setBackground(Color.WHITE);
 
-        JButton btnDiario   = boton("Reporte de Ventas del Dia (hoy)", new Color(34, 85, 153));
+        JButton btnDiario = boton("Reporte de Ventas del Dia (hoy)", new Color(34, 85, 153));
         JButton btnProductos = boton("Top 20 Productos Mas Vendidos (rango)", new Color(30, 130, 76));
-        JButton btnCajero   = boton("Ventas por Cajero (rango)", new Color(140, 80, 10));
+        JButton btnCajero = boton("Ventas por Cajero (rango)", new Color(140, 80, 10));
 
         lblEstado = new JLabel(" ", SwingConstants.CENTER);
         lblEstado.setFont(new Font("Segoe UI", Font.ITALIC, 11));
@@ -98,18 +99,21 @@ public class ReportesFrame extends JFrame {
         final LocalDate d = desde, h = hasta;
 
         SwingWorker<String, Void> worker = new SwingWorker<>() {
-            @Override protected String doInBackground() throws Exception {
+            @Override
+            protected String doInBackground() throws Exception {
                 return switch (tipo) {
-                    case "DIARIO"    -> GeneradorReportePDF.reporteVentasDiarias(
+                    case "DIARIO" -> GeneradorReportePDF.reporteVentasDiarias(
                             LocalDate.now(), sistema.getFacturaDAO());
                     case "PRODUCTOS" -> GeneradorReportePDF.reporteTopProductos(
                             d, h, sistema.getFacturaDAO());
-                    case "CAJERO"    -> GeneradorReportePDF.reporteVentasPorCajero(
+                    case "CAJERO" -> GeneradorReportePDF.reporteVentasPorCajero(
                             d, h, sistema.getFacturaDAO());
                     default -> throw new Exception("Tipo desconocido");
                 };
             }
-            @Override protected void done() {
+
+            @Override
+            protected void done() {
                 try {
                     String ruta = get();
                     lblEstado.setText("PDF generado: " + ruta);
@@ -117,7 +121,7 @@ public class ReportesFrame extends JFrame {
 
                     int resp = JOptionPane.showConfirmDialog(ReportesFrame.this,
                             "Reporte generado exitosamente.\nRuta: " + ruta +
-                            "\n\n¿Desea abrir el archivo?",
+                                    "\n\n¿Desea abrir el archivo?",
                             "Exito", JOptionPane.YES_NO_OPTION,
                             JOptionPane.INFORMATION_MESSAGE);
 

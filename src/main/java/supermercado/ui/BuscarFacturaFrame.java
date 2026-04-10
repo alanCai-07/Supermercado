@@ -1,115 +1,189 @@
 package supermercado.ui;
 
+import supermercado.dao.FacturaDAO;
+import supermercado.modelo.EstadoFactura;
+import supermercado.reporte.GeneradorReportePDF;
 import supermercado.servicio.SistemaFacturacion;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.Desktop;
 import java.awt.event.*;
 import java.io.File;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
 public class BuscarFacturaFrame extends JFrame {
 
     private final SistemaFacturacion sistema = SistemaFacturacion.getInstance();
+    private final FacturaDAO dao = sistema.getFacturaDAO();
+    private final boolean esAdmin = sistema.getCajeroActivo().esAdmin();
 
-    // Tabla principal de facturas
-    private DefaultTableModel      modeloFacturas;
-    private JTable                 tablaFacturas;
+    // Tabla principal
+    private DefaultTableModel modeloFacturas;
+    private JTable tablaFacturas;
     private TableRowSorter<DefaultTableModel> sorter;
 
-    // Tabla de detalle (items de la factura seleccionada)
-    private DefaultTableModel      modeloItems;
-    private JTable                 tablaItems;
+    // Tabla items
+    private DefaultTableModel modeloItems;
+    private JTable tablaItems;
 
     // Filtros
-    private JTextField   txtFiltroNum;
-    private JComboBox<String> cmbFiltroEstado;
+    private JTextField txtFiltro;
+    private JComboBox<String> cmbEstado;
 
-    // Panel detalle
-    private JLabel  lblDetNumero, lblDetFecha, lblDetHora,
-                    lblDetCliente, lblDetCajero, lblDetTotal, lblDetEstado;
-    private JButton btnAnular, btnPDF;
+    // Botones de accion (siempre visibles)
+    private JButton btnVerPDF;
+    private JButton btnVerTermica;
+    private JButton btnAnular;
+    private JButton btnCambiarEstado;
 
-    // Fila actualmente seleccionada (datos completos)
-    private String[] filaSeleccionada = null;
+    // Labels de detalle
+    private JLabel lblNum, lblFecha, lblHora, lblCliente, lblCajero, lblTotal, lblEstadoDet;
+
+    // Fila actualmente seleccionada
+    private String[] filaActual = null;
 
     public BuscarFacturaFrame() {
         setTitle("Historial de Facturas");
-        setSize(1100, 680);
+        setSize(1150, 720);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
         construirUI();
+        // Centrar en la pantalla DESPUÉS de establecer el tamaño
+        setLocationRelativeTo(null);
         cargarFacturas();
     }
 
     // =========================================================
-    //  CONSTRUCCION UI
+    // UI PRINCIPAL
     // =========================================================
     private void construirUI() {
-        JPanel root = new JPanel(new BorderLayout(8, 8));
-        root.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
+        JPanel root = new JPanel(new BorderLayout(0, 0));
         root.setBackground(Color.WHITE);
 
-        root.add(construirPanelFiltros(),  BorderLayout.NORTH);
-        root.add(construirPanelCentro(),   BorderLayout.CENTER);
-        root.add(construirPanelDetalle(),  BorderLayout.SOUTH);
+        root.add(construirBarra(), BorderLayout.NORTH);
+        root.add(construirCentro(), BorderLayout.CENTER);
+        root.add(construirDetalle(), BorderLayout.SOUTH);
+
         add(root);
     }
 
-    // ---- Barra de filtros ----
-    private JPanel construirPanelFiltros() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6));
-        panel.setBackground(new Color(240, 245, 255));
-        panel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0,
-                new Color(180, 200, 230)));
+    // =========================================================
+    // BARRA SUPERIOR: filtros + botones de accion
+    // =========================================================
+    private JPanel construirBarra() {
+        JPanel barra = new JPanel(new BorderLayout(0, 0));
+        barra.setBackground(new Color(34, 85, 153));
+        barra.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+        barra.setPreferredSize(new Dimension(0, 70));
 
+        // Titulo
         JLabel titulo = new JLabel("Historial de Facturas");
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        titulo.setForeground(new Color(34, 85, 153));
-        panel.add(titulo);
+        titulo.setForeground(Color.WHITE);
 
-        panel.add(Box.createHorizontalStrut(20));
-        panel.add(new JLabel("Buscar N°:"));
-        txtFiltroNum = new JTextField(12);
-        LoginFrame.estilizarCampo(txtFiltroNum);
-        txtFiltroNum.setToolTipText("Filtrar por numero de factura o cliente...");
-        panel.add(txtFiltroNum);
+        // Filtros
+        JPanel panelFiltros = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        panelFiltros.setOpaque(false);
 
-        panel.add(new JLabel("Estado:"));
-        cmbFiltroEstado = new JComboBox<>(
-                new String[]{"TODOS", "PAGADA", "PENDIENTE", "ANULADA"});
-        cmbFiltroEstado.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        panel.add(cmbFiltroEstado);
+        JLabel lbF = new JLabel("Buscar:");
+        lbF.setForeground(Color.WHITE);
+        lbF.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        txtFiltro = new JTextField(14);
+        LoginFrame.estilizarCampo(txtFiltro);
+        txtFiltro.setToolTipText("Filtrar por N° factura, cliente o NIT...");
+        txtFiltro.setPreferredSize(new Dimension(180, 28));
+
+        JLabel lbE = new JLabel("Estado:");
+        lbE.setForeground(Color.WHITE);
+        lbE.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        cmbEstado = new JComboBox<>(new String[] { "TODOS", "PAGADA", "PENDIENTE", "ANULADA" });
+        cmbEstado.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cmbEstado.setPreferredSize(new Dimension(120, 28));
 
         JButton btnRecargar = new JButton("Recargar");
-        LoginFrame.estilizarBoton(btnRecargar, new Color(80, 80, 80));
-        btnRecargar.setPreferredSize(new Dimension(100, 32));
-        panel.add(btnRecargar);
+        LoginFrame.estilizarBoton(btnRecargar, new Color(60, 60, 120));
+        btnRecargar.setPreferredSize(new Dimension(100, 30));
+
+        panelFiltros.add(titulo);
+        panelFiltros.add(Box.createHorizontalStrut(14));
+        panelFiltros.add(lbF);
+        panelFiltros.add(txtFiltro);
+        panelFiltros.add(lbE);
+        panelFiltros.add(cmbEstado);
+        panelFiltros.add(btnRecargar);
+        barra.add(panelFiltros, BorderLayout.WEST);
+
+        // ---- BOTONES DE ACCION (siempre visibles en la barra) ----
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
+        panelBotones.setOpaque(false);
+
+        btnVerPDF = new JButton("Ver Factura PDF");
+        btnVerTermica = new JButton("Ver Ticket Termico");
+        btnAnular = new JButton("Anular Factura");
+        btnCambiarEstado = new JButton("Cambiar Estado");
+
+        LoginFrame.estilizarBoton(btnVerPDF, new Color(30, 100, 180));
+        LoginFrame.estilizarBoton(btnVerTermica, new Color(80, 130, 80));
+        LoginFrame.estilizarBoton(btnAnular, new Color(180, 40, 40));
+        LoginFrame.estilizarBoton(btnCambiarEstado, new Color(160, 100, 20));
+
+        Dimension dimBtn = new Dimension(160, 30);
+        btnVerPDF.setPreferredSize(dimBtn);
+        btnVerTermica.setPreferredSize(dimBtn);
+        btnAnular.setPreferredSize(dimBtn);
+        btnCambiarEstado.setPreferredSize(dimBtn);
+
+        // Deshabilitados hasta que se seleccione una fila
+        btnVerPDF.setEnabled(false);
+        btnVerTermica.setEnabled(false);
+        btnAnular.setEnabled(false);
+        btnCambiarEstado.setEnabled(false);
+
+        panelBotones.add(btnVerPDF);
+        panelBotones.add(btnVerTermica);
+        if (esAdmin) {
+            panelBotones.add(btnCambiarEstado);
+            panelBotones.add(btnAnular);
+        }
+        barra.add(panelBotones, BorderLayout.EAST);
 
         // Acciones filtros
-        KeyAdapter filtroKey = new KeyAdapter() {
-            public void keyReleased(KeyEvent e) { aplicarFiltros(); }
-        };
-        txtFiltroNum.addKeyListener(filtroKey);
-        cmbFiltroEstado.addActionListener(e -> aplicarFiltros());
+        txtFiltro.addKeyListener(new KeyAdapter() {
+            public void keyReleased(KeyEvent e) {
+                aplicarFiltros();
+            }
+        });
+        cmbEstado.addActionListener(e -> aplicarFiltros());
         btnRecargar.addActionListener(e -> cargarFacturas());
 
-        return panel;
+        // Acciones botones
+        btnVerPDF.addActionListener(e -> abrirPDF(false));
+        btnVerTermica.addActionListener(e -> abrirPDF(true));
+        btnAnular.addActionListener(e -> anularSeleccionada());
+        btnCambiarEstado.addActionListener(e -> cambiarEstado());
+
+        return barra;
     }
 
-    // ---- Tabla principal + tabla de items ----
-    private JPanel construirPanelCentro() {
-        JPanel panel = new JPanel(new BorderLayout(0, 6));
-        panel.setBackground(Color.WHITE);
-
-        // --- Tabla de facturas ---
+    // =========================================================
+    // CENTRO: tabla facturas + tabla items (SplitPane)
+    // =========================================================
+    private JSplitPane construirCentro() {
+        // --- Tabla facturas ---
         modeloFacturas = new DefaultTableModel(
-            new String[]{"N° Factura", "Fecha", "Hora", "Cliente",
-                         "NIT", "Cajero", "Subtotal", "IVA", "Total",
-                         "Metodo pago", "Estado"}, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+                new String[] { "N° Factura", "Fecha", "Hora", "Cliente",
+                        "NIT", "Cajero", "Subtotal", "IVA", "Total",
+                        "Metodo pago", "Estado" },
+                0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         tablaFacturas = new JTable(modeloFacturas);
         tablaFacturas.setRowHeight(26);
@@ -117,12 +191,11 @@ public class BuscarFacturaFrame extends JFrame {
         tablaFacturas.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
         tablaFacturas.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Anchos de columna
-        int[] anchos = {90, 85, 55, 160, 90, 120, 85, 70, 90, 110, 80};
+        int[] anchos = { 95, 85, 55, 160, 95, 120, 85, 70, 95, 130, 85 };
         for (int i = 0; i < anchos.length; i++)
             tablaFacturas.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
 
-        // Renderer con colores por estado
+        // Colores por estado
         tablaFacturas.setDefaultRenderer(Object.class, (t, val, sel, foc, row, col) -> {
             JLabel lbl = new JLabel(val == null ? "" : val.toString());
             lbl.setOpaque(true);
@@ -130,126 +203,100 @@ public class BuscarFacturaFrame extends JFrame {
             String estado = modeloFacturas.getValueAt(row, 10).toString();
             if (sel) {
                 lbl.setBackground(new Color(184, 207, 229));
+                lbl.setForeground(Color.BLACK);
             } else if ("ANULADA".equals(estado)) {
-                lbl.setBackground(new Color(255, 220, 220));
+                lbl.setBackground(new Color(255, 215, 215));
                 lbl.setForeground(new Color(140, 30, 30));
-            } else if ("PAGADA".equals(estado)) {
-                lbl.setBackground(row % 2 == 0 ? new Color(240, 255, 240) : Color.WHITE);
-            } else { // PENDIENTE
-                lbl.setBackground(new Color(255, 250, 220));
+            } else if ("PENDIENTE".equals(estado)) {
+                lbl.setBackground(new Color(255, 248, 210));
+                lbl.setForeground(new Color(120, 80, 0));
+            } else {
+                lbl.setBackground(row % 2 == 0 ? new Color(242, 250, 242) : Color.WHITE);
+                lbl.setForeground(Color.BLACK);
             }
-            // Columna total en negrita
-            if (col == 8) lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
+            if (col == 8)
+                lbl.setFont(lbl.getFont().deriveFont(Font.BOLD));
+            if (col == 10) {
+                lbl.setHorizontalAlignment(SwingConstants.CENTER);
+                lbl.setFont(lbl.getFont().deriveFont(Font.BOLD, 11f));
+            }
             return lbl;
         });
 
         sorter = new TableRowSorter<>(modeloFacturas);
         tablaFacturas.setRowSorter(sorter);
 
-        JScrollPane scrollFacturas = new JScrollPane(tablaFacturas);
-        scrollFacturas.setBorder(BorderFactory.createTitledBorder("Todas las facturas"));
-        scrollFacturas.setPreferredSize(new Dimension(0, 260));
+        JScrollPane scrollFact = new JScrollPane(tablaFacturas);
+        scrollFact.setBorder(BorderFactory.createTitledBorder("  Todas las facturas  "));
 
-        // --- Tabla de items del detalle ---
+        // --- Tabla items ---
         modeloItems = new DefaultTableModel(
-            new String[]{"Producto", "Cant.", "Precio unit.", "Subtotal", "IVA", "Total"}, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+                new String[] { "Producto", "Cant.", "Precio unit.", "Subtotal", "IVA", "Total" }, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         tablaItems = new JTable(modeloItems);
         tablaItems.setRowHeight(24);
         tablaItems.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tablaItems.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 11));
-        tablaItems.getColumnModel().getColumn(0).setPreferredWidth(260);
+        tablaItems.getColumnModel().getColumn(0).setPreferredWidth(280);
 
         JScrollPane scrollItems = new JScrollPane(tablaItems);
-        scrollItems.setBorder(BorderFactory.createTitledBorder(
-                "Productos de la factura seleccionada"));
-        scrollItems.setPreferredSize(new Dimension(0, 150));
+        scrollItems.setBorder(BorderFactory.createTitledBorder("  Productos de la factura seleccionada  "));
 
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                scrollFacturas, scrollItems);
-        split.setResizeWeight(0.6);
-        split.setDividerSize(6);
-        split.setBorder(null);
-        panel.add(split, BorderLayout.CENTER);
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, scrollFact, scrollItems);
+        split.setResizeWeight(0.62);
+        split.setDividerSize(5);
 
-        // Al seleccionar una fila cargar sus items y actualizar el detalle
+        // Listener de seleccion
         tablaFacturas.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) onSeleccionFila();
+            if (!e.getValueIsAdjusting())
+                onSeleccionFila();
         });
 
-        return panel;
+        return split;
     }
 
-    // ---- Panel inferior: info detalle + botones ----
-    private JPanel construirPanelDetalle() {
-        JPanel panel = new JPanel(new BorderLayout(10, 0));
-        panel.setBackground(new Color(245, 248, 255));
+    // =========================================================
+    // PANEL DETALLE INFERIOR (siempre visible, altura fija)
+    // =========================================================
+    private JPanel construirDetalle() {
+        JPanel panel = new JPanel(new GridLayout(1, 7, 8, 0));
+        panel.setBackground(new Color(235, 242, 255));
         panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(180, 200, 230)),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
+                BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(160, 190, 230)),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14)));
+        panel.setPreferredSize(new Dimension(0, 64));
 
-        // Info en grid
-        JPanel info = new JPanel(new GridLayout(2, 6, 8, 4));
-        info.setBackground(new Color(245, 248, 255));
+        lblNum = infoLabel("—");
+        lblFecha = infoLabel("—");
+        lblHora = infoLabel("—");
+        lblCliente = infoLabel("—");
+        lblCajero = infoLabel("—");
+        lblTotal = infoLabel("—");
+        lblEstadoDet = infoLabel("—");
 
-        lblDetNumero  = etiquetaInfo("—");
-        lblDetFecha   = etiquetaInfo("—");
-        lblDetHora    = etiquetaInfo("—");
-        lblDetCliente = etiquetaInfo("—");
-        lblDetCajero  = etiquetaInfo("—");
-        lblDetTotal   = etiquetaInfo("—");
-        lblDetEstado  = etiquetaInfo("—");
-
-        info.add(labelTitulo("N° Factura:"));   info.add(lblDetNumero);
-        info.add(labelTitulo("Fecha:"));        info.add(lblDetFecha);
-        info.add(labelTitulo("Hora:"));         info.add(lblDetHora);
-        info.add(labelTitulo("Cliente:"));      info.add(lblDetCliente);
-        info.add(labelTitulo("Cajero:"));       info.add(lblDetCajero);
-        info.add(labelTitulo("Total:"));        info.add(lblDetTotal);
-
-        panel.add(info, BorderLayout.CENTER);
-
-        // Botones de accion
-        JPanel botones = new JPanel(new GridLayout(3, 1, 0, 6));
-        botones.setBackground(new Color(245, 248, 255));
-        botones.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
-
-        btnPDF    = new JButton("Ver / PDF");
-        btnAnular = new JButton("Anular factura");
-        JButton btnEstado = new JButton("Estado: " +
-                sistema.getCajeroActivo().getRol());
-
-        LoginFrame.estilizarBoton(btnPDF,    new Color(34, 85, 153));
-        LoginFrame.estilizarBoton(btnAnular, new Color(160, 40, 40));
-        LoginFrame.estilizarBoton(btnEstado, new Color(80, 80, 80));
-
-        btnPDF   .setEnabled(false);
-        btnAnular.setEnabled(false);
-
-        botones.add(btnPDF);
-        botones.add(btnAnular);
-        botones.add(btnEstado);
-        panel.add(botones, BorderLayout.EAST);
-
-        // Acciones
-        btnPDF.addActionListener(e -> verPDF());
-        btnAnular.addActionListener(e -> anularSeleccionada());
-        btnEstado.setEnabled(false);
+        panel.add(bloqueDet("N° Factura", lblNum));
+        panel.add(bloqueDet("Fecha", lblFecha));
+        panel.add(bloqueDet("Hora", lblHora));
+        panel.add(bloqueDet("Cliente", lblCliente));
+        panel.add(bloqueDet("Cajero", lblCajero));
+        panel.add(bloqueDet("Total", lblTotal));
+        panel.add(bloqueDet("Estado", lblEstadoDet));
 
         return panel;
     }
 
     // =========================================================
-    //  LOGICA DE DATOS
+    // DATOS
     // =========================================================
     private void cargarFacturas() {
         modeloFacturas.setRowCount(0);
         modeloItems.setRowCount(0);
         limpiarDetalle();
         try {
-            List<String[]> filas = sistema.getFacturaDAO().listarTodas();
-            for (String[] f : filas)
+            for (String[] f : dao.listarTodas())
                 modeloFacturas.addRow(f);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
@@ -259,109 +306,130 @@ public class BuscarFacturaFrame extends JFrame {
     }
 
     private void aplicarFiltros() {
-        String texto = txtFiltroNum.getText().trim();
-        String estado = (String) cmbFiltroEstado.getSelectedItem();
+        String txt = txtFiltro.getText().trim();
+        String estado = (String) cmbEstado.getSelectedItem();
 
-        RowFilter<DefaultTableModel, Object> filtroTexto = texto.isEmpty() ? null :
-                RowFilter.regexFilter("(?i)" + texto, 0, 3, 4); // col N°, cliente, NIT
+        RowFilter<DefaultTableModel, Object> fTxt = txt.isEmpty() ? null : RowFilter.regexFilter("(?i)" + txt, 0, 3, 4);
+        RowFilter<DefaultTableModel, Object> fEst = "TODOS".equals(estado) ? null
+                : RowFilter.regexFilter("^" + estado + "$", 10);
 
-        RowFilter<DefaultTableModel, Object> filtroEstado =
-                "TODOS".equals(estado) ? null :
-                RowFilter.regexFilter(estado, 10); // col estado
-
-        if (filtroTexto == null && filtroEstado == null) {
+        if (fTxt == null && fEst == null)
             sorter.setRowFilter(null);
-        } else if (filtroTexto == null) {
-            sorter.setRowFilter(filtroEstado);
-        } else if (filtroEstado == null) {
-            sorter.setRowFilter(filtroTexto);
-        } else {
-            sorter.setRowFilter(RowFilter.andFilter(
-                    java.util.Arrays.asList(filtroTexto, filtroEstado)));
-        }
+        else if (fTxt == null)
+            sorter.setRowFilter(fEst);
+        else if (fEst == null)
+            sorter.setRowFilter(fTxt);
+        else
+            sorter.setRowFilter(RowFilter.andFilter(Arrays.asList(fTxt, fEst)));
     }
 
     private void onSeleccionFila() {
-        int filaVista = tablaFacturas.getSelectedRow();
-        if (filaVista < 0) {
+        int vista = tablaFacturas.getSelectedRow();
+        if (vista < 0) {
             limpiarDetalle();
             return;
         }
-        int fila = tablaFacturas.convertRowIndexToModel(filaVista);
-        filaSeleccionada = new String[modeloFacturas.getColumnCount()];
-        for (int c = 0; c < filaSeleccionada.length; c++)
-            filaSeleccionada[c] = modeloFacturas.getValueAt(fila, c).toString();
 
-        // Llenar panel detalle
-        lblDetNumero .setText(filaSeleccionada[0]);
-        lblDetFecha  .setText(filaSeleccionada[1]);
-        lblDetHora   .setText(filaSeleccionada[2]);
-        lblDetCliente.setText(filaSeleccionada[3] + "  (NIT: " + filaSeleccionada[4] + ")");
-        lblDetCajero .setText(filaSeleccionada[5]);
-        lblDetTotal  .setText(filaSeleccionada[8]);
+        int modelo = tablaFacturas.convertRowIndexToModel(vista);
+        filaActual = new String[modeloFacturas.getColumnCount()];
+        for (int c = 0; c < filaActual.length; c++)
+            filaActual[c] = String.valueOf(modeloFacturas.getValueAt(modelo, c));
 
-        boolean esPagada  = "PAGADA" .equals(filaSeleccionada[10]);
-        boolean esAnulada = "ANULADA".equals(filaSeleccionada[10]);
+        // Actualizar labels de detalle
+        lblNum.setText(filaActual[0]);
+        lblFecha.setText(filaActual[1]);
+        lblHora.setText(filaActual[2]);
+        lblCliente.setText(filaActual[3]);
+        lblCajero.setText(filaActual[5]);
+        lblTotal.setText(filaActual[8]);
 
-        btnPDF   .setEnabled(true);
-        // Solo ADMIN puede anular; solo facturas PAGADAS se pueden anular
-        btnAnular.setEnabled(esPagada && sistema.getCajeroActivo().esAdmin());
+        String estado = filaActual[10];
+        lblEstadoDet.setText(estado);
+        lblEstadoDet.setForeground(colorEstado(estado));
 
-        // Cargar items de esta factura
-        cargarItems(filaSeleccionada[0]);
-    }
+        // Habilitar botones
+        boolean esPagada = "PAGADA".equals(estado);
+        boolean esAnulada = "ANULADA".equals(estado);
+        boolean esPendiente = "PENDIENTE".equals(estado);
 
-    private void cargarItems(String numeroFactura) {
+        btnVerPDF.setEnabled(true);
+        btnVerTermica.setEnabled(true);
+        // Anular: cualquier cajero puede anular, pero solo facturas PAGADAS o
+        // PENDIENTES
+        btnAnular.setEnabled(esAdmin && !esAnulada);
+        // Cambiar estado: solo ADMIN
+        btnCambiarEstado.setEnabled(esAdmin && !esAnulada);
+
+        // Cargar items
         modeloItems.setRowCount(0);
         try {
-            List<String[]> items = sistema.getFacturaDAO().itemsDe(numeroFactura);
-            for (String[] it : items)
+            for (String[] it : dao.itemsDe(filaActual[0]))
                 modeloItems.addRow(it);
         } catch (Exception ex) {
-            modeloItems.addRow(new String[]{"Error al cargar items: " + ex.getMessage(),
-                    "", "", "", "", ""});
+            modeloItems.addRow(new String[] { "Error: " + ex.getMessage(), "", "", "", "", "" });
         }
     }
 
-    private void verPDF() {
-        if (filaSeleccionada == null) return;
-        try {
-            String ruta = "reportes/facturas/" + filaSeleccionada[0] + ".pdf";
-            File f = new File(ruta);
-            if (f.exists()) {
+    // =========================================================
+    // ACCIONES BOTONES
+    // =========================================================
+    private void abrirPDF(boolean termica) {
+        if (filaActual == null)
+            return;
+        String numero = filaActual[0];
+        String prefijo = termica ? "TERMICA_" : "";
+        String ruta = "reportes/facturas/" + prefijo + numero + ".pdf";
+        File f = new File(ruta);
+
+        if (f.exists()) {
+            try {
                 Desktop.getDesktop().open(f);
-            } else {
+            } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
-                        "El PDF no existe en disco.\nRuta buscada: " + ruta +
-                        "\n\nSolo se pueden regenerar facturas que aun esten\n" +
-                        "cargadas en la sesion actual.",
-                        "PDF no encontrado", JOptionPane.WARNING_MESSAGE);
+                        "No se pudo abrir el PDF: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error al abrir PDF: " + ex.getMessage());
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "El archivo PDF no existe en disco.\n\n" +
+                            "Ruta buscada:\n" + f.getAbsolutePath() + "\n\n" +
+                            "Los PDFs se generan al momento de realizar la venta.\n" +
+                            "Facturas antiguas pueden no tener PDF guardado.",
+                    "PDF no encontrado", JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void anularSeleccionada() {
-        if (filaSeleccionada == null) return;
-        String numero = filaSeleccionada[0];
+        if (filaActual == null)
+            return;
+        String numero = filaActual[0];
+        String estado = filaActual[10];
+
+        if ("ANULADA".equals(estado)) {
+            JOptionPane.showMessageDialog(this,
+                    "Esta factura ya fue anulada.", "Aviso",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
 
         int r = JOptionPane.showConfirmDialog(this,
-                "¿Confirma anular la factura " + numero + "?\n\n" +
-                "Cliente : " + filaSeleccionada[3] + "\n" +
-                "Total   : " + filaSeleccionada[8] + "\n\n" +
-                "Esta accion no se puede deshacer.",
-                "Anular factura", JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+                "¿Confirmar anulacion de la factura " + numero + "?\n\n" +
+                        "Cliente : " + filaActual[3] + "\n" +
+                        "Total   : " + filaActual[8] + "\n" +
+                        "Estado  : " + estado + "\n\n" +
+                        "Esta accion cambiara el estado a ANULADA.",
+                "Anular factura",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
-        if (r != JOptionPane.YES_OPTION) return;
+        if (r != JOptionPane.YES_OPTION)
+            return;
 
         try {
             sistema.anularFactura(numero);
             JOptionPane.showMessageDialog(this,
                     "Factura " + numero + " anulada correctamente.",
                     "Anulada", JOptionPane.INFORMATION_MESSAGE);
-            cargarFacturas(); // recargar la lista completa
+            cargarFacturas();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this,
                     "Error al anular: " + ex.getMessage(),
@@ -369,33 +437,104 @@ public class BuscarFacturaFrame extends JFrame {
         }
     }
 
-    // =========================================================
-    //  UTILIDADES UI
-    // =========================================================
-    private void limpiarDetalle() {
-        filaSeleccionada = null;
-        lblDetNumero .setText("—");
-        lblDetFecha  .setText("—");
-        lblDetHora   .setText("—");
-        lblDetCliente.setText("—");
-        lblDetCajero .setText("—");
-        lblDetTotal  .setText("—");
-        if (lblDetEstado != null) lblDetEstado.setText("—");
-        btnPDF   .setEnabled(false);
-        btnAnular.setEnabled(false);
+    private void cambiarEstado() {
+        if (filaActual == null)
+            return;
+        String numero = filaActual[0];
+        String estadoActual = filaActual[10];
+
+        // Opciones disponibles segun el estado actual
+        String[] opciones;
+        if ("PAGADA".equals(estadoActual)) {
+            opciones = new String[] { "PENDIENTE", "ANULADA" };
+        } else if ("PENDIENTE".equals(estadoActual)) {
+            opciones = new String[] { "PAGADA", "ANULADA" };
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "No se puede cambiar el estado de una factura ANULADA.",
+                    "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        String nuevoEstado = (String) JOptionPane.showInputDialog(
+                this,
+                "Factura: " + numero + "\n" +
+                        "Estado actual: " + estadoActual + "\n\n" +
+                        "Seleccione el nuevo estado:",
+                "Cambiar estado",
+                JOptionPane.QUESTION_MESSAGE,
+                null, opciones, opciones[0]);
+
+        if (nuevoEstado == null)
+            return; // cancelado
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "¿Cambiar estado de " + estadoActual + " a " + nuevoEstado + "?\n\n" +
+                        "Factura : " + numero + "\n" +
+                        "Cliente : " + filaActual[3],
+                "Confirmar cambio",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION)
+            return;
+
+        try {
+            EstadoFactura ef = EstadoFactura.valueOf(nuevoEstado);
+            dao.actualizarEstado(numero, ef);
+            JOptionPane.showMessageDialog(this,
+                    "Estado de " + numero + " cambiado a " + nuevoEstado + ".",
+                    "Exito", JOptionPane.INFORMATION_MESSAGE);
+            cargarFacturas();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cambiar estado: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private JLabel etiquetaInfo(String texto) {
+    // =========================================================
+    // UTILIDADES
+    // =========================================================
+    private void limpiarDetalle() {
+        filaActual = null;
+        lblNum.setText("—");
+        lblFecha.setText("—");
+        lblHora.setText("—");
+        lblCliente.setText("—");
+        lblCajero.setText("—");
+        lblTotal.setText("—");
+        lblEstadoDet.setText("—");
+        lblEstadoDet.setForeground(Color.GRAY);
+        btnVerPDF.setEnabled(false);
+        btnVerTermica.setEnabled(false);
+        btnAnular.setEnabled(false);
+        btnCambiarEstado.setEnabled(false);
+    }
+
+    private Color colorEstado(String estado) {
+        return switch (estado) {
+            case "PAGADA" -> new Color(30, 120, 50);
+            case "ANULADA" -> new Color(180, 30, 30);
+            case "PENDIENTE" -> new Color(160, 100, 0);
+            default -> Color.GRAY;
+        };
+    }
+
+    private JLabel infoLabel(String texto) {
         JLabel l = new JLabel(texto);
         l.setFont(new Font("Segoe UI", Font.BOLD, 12));
         l.setForeground(new Color(34, 85, 153));
         return l;
     }
 
-    private JLabel labelTitulo(String texto) {
-        JLabel l = new JLabel(texto);
-        l.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        l.setForeground(Color.GRAY);
-        return l;
+    private JPanel bloqueDet(String titulo, JLabel valor) {
+        JPanel p = new JPanel(new BorderLayout(0, 2));
+        p.setOpaque(false);
+        JLabel t = new JLabel(titulo);
+        t.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        t.setForeground(Color.GRAY);
+        p.add(t, BorderLayout.NORTH);
+        p.add(valor, BorderLayout.CENTER);
+        return p;
     }
 }
