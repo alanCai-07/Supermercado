@@ -18,14 +18,35 @@
     </properties>
 
     <dependencies>
-        <!-- MySQL Connector -->
+
+        <!-- =====================================================
+             OPCION A: PostgreSQL (activa por defecto)
+             Driver JDBC para PostgreSQL 15+
+        ====================================================== -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
+        </dependency>
+
+        <!-- =====================================================
+             OPCION B: MySQL (comentada — descomenta si usas MySQL)
+             Para cambiar de PG a MySQL:
+               1. Comenta el bloque PostgreSQL de arriba
+               2. Descomenta este bloque
+               3. Cambia db.driver en config.properties
+        ====================================================== -->
+        <!--
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>8.3.0</version>
         </dependency>
+        -->
 
-        <!-- iText 7 PDF -->
+        <!-- =====================================================
+             iText 7 — Generacion de PDFs (facturas y reportes)
+        ====================================================== -->
         <dependency>
             <groupId>com.itextpdf</groupId>
             <artifactId>kernel</artifactId>
@@ -41,16 +62,16 @@
             <artifactId>io</artifactId>
             <version>7.2.5</version>
         </dependency>
-    
-      <dependency>
-        <groupId>com.github.nut077</groupId>
-        <artifactId>pdf-freedom</artifactId>
-        <version>1.0.3</version>
-      </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+
+            <!-- ===============================================
+                 Plugin JAR: empaqueta el proyecto ejecutable
+                 Incluye el MANIFEST con la clase principal
+            ================================================ -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -59,10 +80,78 @@
                     <archive>
                         <manifest>
                             <mainClass>supermercado.Main</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                     </archive>
+                    <!-- Excluir config.properties del JAR:
+                         el archivo se leerá desde el sistema de archivos externo -->
+                    <excludes>
+                        <exclude>**/config.properties</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
+
+            <!-- ===============================================
+                 Plugin Resources: controla que archivos van
+                 al classpath y cuales se excluyen del JAR
+            ================================================ -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- ===============================================
+                 Plugin Compiler: Java 17
+            ================================================ -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- ===============================================
+                 Plugin Exec: ejecutar la aplicacion en desarrollo
+                 Uso: mvn compile exec:java
+            ================================================ -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <mainClass>supermercado.Main</mainClass>
+                </configuration>
+            </plugin>
+
         </plugins>
+
+        <!-- Incluir resources en el classpath durante desarrollo -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <!-- Solo incluir el template, nunca el archivo real con credenciales -->
+                <includes>
+                    <include>config.properties.template</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.png</include>
+                    <include>**/*.ico</include>
+                </includes>
+                <!-- Excluir explicitamente el archivo real de configuracion -->
+                <excludes>
+                    <exclude>config.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
     </build>
+
 </project>

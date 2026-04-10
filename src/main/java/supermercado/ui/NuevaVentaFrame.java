@@ -18,39 +18,39 @@ import java.util.List;
 
 public class NuevaVentaFrame extends JFrame {
 
-    private final JFrame             parent;
-    private final SistemaFacturacion sistema   = SistemaFacturacion.getInstance();
-    private final ClienteDAO         clienteDAO = new ClienteDAO();
+    private final JFrame parent;
+    private final SistemaFacturacion sistema = SistemaFacturacion.getInstance();
+    private final ClienteDAO clienteDAO = new ClienteDAO();
 
-    private Factura  facturaActual;
-    private Cliente  clienteActual;
+    private Factura facturaActual;
+    private Cliente clienteActual;
 
     // Lista interna del carrito (fuente de verdad en memoria)
     private final List<ItemFactura> itemsCarrito = new ArrayList<>();
 
     // ---- Componentes cliente ----
     private JTextField txtNitBuscar;
-    private JLabel     lblClienteNombre;
-    private JLabel     lblClienteInfo;
-    private JButton    btnBuscarCliente;
-    private JButton    btnNuevoCliente;
-    private JButton    btnConsumidorFinal;
-    private JPanel     panelClienteInfo;
+    private JLabel lblClienteNombre;
+    private JLabel lblClienteInfo;
+    private JButton btnBuscarCliente;
+    private JButton btnNuevoCliente;
+    private JButton btnConsumidorFinal;
+    private JPanel panelClienteInfo;
 
     // ---- Componentes productos ----
-    private JTextField        txtBuscarProducto;
-    private JTable            tablaProductos;
+    private JTextField txtBuscarProducto;
+    private JTable tablaProductos;
     private DefaultTableModel modeloProductos;
-    private JTextField        txtCant;
+    private JTextField txtCant;
 
     // ---- Componentes carrito ----
-    private JTable            tablaItems;
+    private JTable tablaItems;
     private DefaultTableModel modeloItems;
-    private JLabel            lblSubtotal, lblIva, lblTotal;
+    private JLabel lblSubtotal, lblIva, lblTotal;
     private JComboBox<String> cmbPago;
-    private JTextField        txtMontoPago;
-    private JButton           btnCobrar;
-    private JPanel            panelCarritoBorder;
+    private JTextField txtMontoPago;
+    private JButton btnCobrar;
+    private JPanel panelCarritoBorder;
 
     public NuevaVentaFrame(JFrame parent) {
         this.parent = parent;
@@ -65,7 +65,7 @@ public class NuevaVentaFrame extends JFrame {
     }
 
     // =========================================================
-    //  CONSTRUCCION UI
+    // CONSTRUCCION UI
     // =========================================================
     private void construirUI() {
         JPanel root = new JPanel(new BorderLayout(8, 8));
@@ -79,14 +79,14 @@ public class NuevaVentaFrame extends JFrame {
         JPanel centro = new JPanel(new BorderLayout(8, 0));
         centro.setBackground(Color.WHITE);
         centro.add(construirPanelProductos(), BorderLayout.WEST);
-        centro.add(construirPanelCarrito(),   BorderLayout.CENTER);
+        centro.add(construirPanelCarrito(), BorderLayout.CENTER);
         root.add(centro, BorderLayout.CENTER);
 
         add(root);
     }
 
     // =========================================================
-    //  PANEL CLIENTE (NORTH — ancho completo)
+    // PANEL CLIENTE (NORTH — ancho completo)
     // =========================================================
     private JPanel construirPanelCliente() {
         JPanel panel = new JPanel(new BorderLayout(10, 0));
@@ -110,17 +110,17 @@ public class NuevaVentaFrame extends JFrame {
         LoginFrame.estilizarCampo(txtNitBuscar);
         txtNitBuscar.setToolTipText("Ingrese el NIT/CC (numeros) o el nombre del cliente y presione Buscar");
 
-        btnBuscarCliente   = new JButton("Buscar cliente");
-        btnNuevoCliente    = new JButton("+ Nuevo cliente");
+        btnBuscarCliente = new JButton("Buscar cliente");
+        btnNuevoCliente = new JButton("+ Nuevo cliente");
         btnConsumidorFinal = new JButton("Consumidor final");
 
-        LoginFrame.estilizarBoton(btnBuscarCliente,   new Color(34, 85, 153));
-        LoginFrame.estilizarBoton(btnNuevoCliente,    new Color(30, 130, 76));
+        LoginFrame.estilizarBoton(btnBuscarCliente, new Color(34, 85, 153));
+        LoginFrame.estilizarBoton(btnNuevoCliente, new Color(30, 130, 76));
         LoginFrame.estilizarBoton(btnConsumidorFinal, new Color(100, 100, 100));
 
         Dimension dimBtn = new Dimension(150, 30);
-        btnBuscarCliente  .setPreferredSize(dimBtn);
-        btnNuevoCliente   .setPreferredSize(dimBtn);
+        btnBuscarCliente.setPreferredSize(dimBtn);
+        btnNuevoCliente.setPreferredSize(dimBtn);
         btnConsumidorFinal.setPreferredSize(dimBtn);
 
         izq.add(lblNit);
@@ -149,15 +149,15 @@ public class NuevaVentaFrame extends JFrame {
 
         // ---- Acciones ----
         txtNitBuscar.addActionListener(e -> buscarCliente());
-        btnBuscarCliente  .addActionListener(e -> buscarCliente());
+        btnBuscarCliente.addActionListener(e -> buscarCliente());
         btnConsumidorFinal.addActionListener(e -> asignarConsumidorFinal());
-        btnNuevoCliente   .addActionListener(e -> abrirDialogoNuevoCliente());
+        btnNuevoCliente.addActionListener(e -> abrirDialogoNuevoCliente());
 
         return panel;
     }
 
     // =========================================================
-    //  PANEL PRODUCTOS (WEST)
+    // PANEL PRODUCTOS (WEST)
     // =========================================================
     private JPanel construirPanelProductos() {
         JPanel panel = new JPanel(new BorderLayout(4, 6));
@@ -173,14 +173,16 @@ public class NuevaVentaFrame extends JFrame {
         JButton btnBuscar = new JButton("Buscar");
         LoginFrame.estilizarBoton(btnBuscar, new Color(34, 85, 153));
         barraBusq.add(new JLabel("Buscar: "), BorderLayout.WEST);
-        barraBusq.add(txtBuscarProducto,      BorderLayout.CENTER);
-        barraBusq.add(btnBuscar,              BorderLayout.EAST);
+        barraBusq.add(txtBuscarProducto, BorderLayout.CENTER);
+        barraBusq.add(btnBuscar, BorderLayout.EAST);
         panel.add(barraBusq, BorderLayout.NORTH);
 
         // Tabla productos
         modeloProductos = new DefaultTableModel(
-                new String[]{"Codigo", "Nombre", "Precio", "IVA%", "Stock"}, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+                new String[] { "Codigo", "Nombre", "Precio", "IVA%", "Stock" }, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         tablaProductos = new JTable(modeloProductos);
         tablaProductos.setRowHeight(24);
@@ -203,9 +205,9 @@ public class NuevaVentaFrame extends JFrame {
         txtCant.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
         JButton btnMenos = new JButton("-");
-        JButton btnMas   = new JButton("+");
+        JButton btnMas = new JButton("+");
         estilizarBtnCant(btnMenos, new Color(180, 60, 60));
-        estilizarBtnCant(btnMas,   new Color(30, 130, 76));
+        estilizarBtnCant(btnMas, new Color(30, 130, 76));
 
         JButton btnAgregar = new JButton("  Agregar al carrito  ");
         LoginFrame.estilizarBoton(btnAgregar, new Color(30, 130, 76));
@@ -225,8 +227,8 @@ public class NuevaVentaFrame extends JFrame {
         btnBuscar.addActionListener(accionBuscar);
         txtBuscarProducto.addActionListener(accionBuscar);
         btnMenos.addActionListener(e -> cambiarCantidad(-1));
-        btnMas  .addActionListener(e -> cambiarCantidad(+1));
-        txtCant .addActionListener(e -> btnAgregar.doClick());
+        btnMas.addActionListener(e -> cambiarCantidad(+1));
+        txtCant.addActionListener(e -> btnAgregar.doClick());
 
         btnAgregar.addActionListener(e -> {
             int fila = tablaProductos.getSelectedRow();
@@ -237,7 +239,8 @@ public class NuevaVentaFrame extends JFrame {
                 return;
             }
             int cant = leerCantidad();
-            if (cant <= 0) return;
+            if (cant <= 0)
+                return;
             agregarAlCarrito((String) modeloProductos.getValueAt(fila, 0), cant);
         });
 
@@ -257,7 +260,7 @@ public class NuevaVentaFrame extends JFrame {
     }
 
     // =========================================================
-    //  PANEL CARRITO (CENTER)
+    // PANEL CARRITO (CENTER)
     // =========================================================
     private JPanel construirPanelCarrito() {
         JPanel panel = new JPanel(new BorderLayout(4, 6));
@@ -269,8 +272,10 @@ public class NuevaVentaFrame extends JFrame {
         panelCarritoBorder.setBackground(Color.WHITE);
 
         modeloItems = new DefaultTableModel(
-                new String[]{"Producto", "Cant.", "Unitario", "IVA", "Total"}, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+                new String[] { "Producto", "Cant.", "Unitario", "IVA", "Total" }, 0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         tablaItems = new JTable(modeloItems);
         tablaItems.setRowHeight(26);
@@ -289,16 +294,19 @@ public class NuevaVentaFrame extends JFrame {
         panelTotales.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14));
 
         lblSubtotal = new JLabel("$0", SwingConstants.RIGHT);
-        lblIva      = new JLabel("$0", SwingConstants.RIGHT);
-        lblTotal    = new JLabel("$0", SwingConstants.RIGHT);
+        lblIva = new JLabel("$0", SwingConstants.RIGHT);
+        lblTotal = new JLabel("$0", SwingConstants.RIGHT);
         lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 17));
         lblTotal.setForeground(new Color(34, 85, 153));
 
         JLabel lbTot = new JLabel("TOTAL:");
         lbTot.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        panelTotales.add(new JLabel("Subtotal:")); panelTotales.add(lblSubtotal);
-        panelTotales.add(new JLabel("IVA:"));      panelTotales.add(lblIva);
-        panelTotales.add(lbTot);                   panelTotales.add(lblTotal);
+        panelTotales.add(new JLabel("Subtotal:"));
+        panelTotales.add(lblSubtotal);
+        panelTotales.add(new JLabel("IVA:"));
+        panelTotales.add(lblIva);
+        panelTotales.add(lbTot);
+        panelTotales.add(lblTotal);
 
         // Cobro
         JPanel panelCobro = new JPanel(new GridBagLayout());
@@ -308,8 +316,8 @@ public class NuevaVentaFrame extends JFrame {
         gc.insets = new Insets(5, 8, 5, 8);
         gc.fill = GridBagConstraints.HORIZONTAL;
 
-        cmbPago = new JComboBox<>(new String[]{
-                "EFECTIVO", "TARJETA_DEBITO", "TARJETA_CREDITO"});
+        cmbPago = new JComboBox<>(new String[] {
+                "EFECTIVO", "TARJETA_DEBITO", "TARJETA_CREDITO" });
         txtMontoPago = new JTextField("0", 12);
         LoginFrame.estilizarCampo(txtMontoPago);
         btnCobrar = new JButton("COBRAR");
@@ -317,31 +325,39 @@ public class NuevaVentaFrame extends JFrame {
         btnCobrar.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btnCobrar.setPreferredSize(new Dimension(0, 46));
 
-        gc.gridx=0; gc.gridy=0; gc.weightx=0.35;
+        gc.gridx = 0;
+        gc.gridy = 0;
+        gc.weightx = 0.35;
         panelCobro.add(new JLabel("Metodo pago:"), gc);
-        gc.gridx=1; gc.weightx=0.65;
+        gc.gridx = 1;
+        gc.weightx = 0.65;
         panelCobro.add(cmbPago, gc);
-        gc.gridx=0; gc.gridy=1; gc.weightx=0.35;
+        gc.gridx = 0;
+        gc.gridy = 1;
+        gc.weightx = 0.35;
         panelCobro.add(new JLabel("Monto recibido:"), gc);
-        gc.gridx=1; gc.weightx=0.65;
+        gc.gridx = 1;
+        gc.weightx = 0.65;
         panelCobro.add(txtMontoPago, gc);
-        gc.gridx=0; gc.gridy=2; gc.gridwidth=2;
+        gc.gridx = 0;
+        gc.gridy = 2;
+        gc.gridwidth = 2;
         panelCobro.add(btnCobrar, gc);
 
         JPanel inferior = new JPanel(new BorderLayout(4, 4));
         inferior.setBackground(Color.WHITE);
         inferior.add(panelTotales, BorderLayout.NORTH);
-        inferior.add(panelCobro,   BorderLayout.CENTER);
+        inferior.add(panelCobro, BorderLayout.CENTER);
 
         panel.add(panelCarritoBorder, BorderLayout.CENTER);
-        panel.add(inferior,           BorderLayout.SOUTH);
+        panel.add(inferior, BorderLayout.SOUTH);
 
         btnCobrar.addActionListener(e -> procesarCobro());
         return panel;
     }
 
     // =========================================================
-    //  LOGICA DE CLIENTE
+    // LOGICA DE CLIENTE
     // =========================================================
 
     /** Busca cliente por NIT o por nombre y lo asigna a la factura. */
@@ -376,7 +392,8 @@ public class NuevaVentaFrame extends JFrame {
             } else {
                 // Multiples resultados: mostrar dialogo de seleccion
                 Cliente seleccionado = mostrarDialogoSeleccion(resultados);
-                if (seleccionado != null) asignarCliente(seleccionado);
+                if (seleccionado != null)
+                    asignarCliente(seleccionado);
             }
 
         } catch (Exception ex) {
@@ -406,13 +423,15 @@ public class NuevaVentaFrame extends JFrame {
         panel.add(lbl, BorderLayout.NORTH);
 
         // Tabla de resultados
-        String[] cols = {"NIT / CC", "Nombre", "Telefono", "Email"};
+        String[] cols = { "NIT / CC", "Nombre", "Telefono", "Email" };
         DefaultTableModel modelo = new DefaultTableModel(cols, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         for (Cliente c : clientes)
-            modelo.addRow(new Object[]{
-                c.getNit(), c.getNombre(), c.getTelefono(), c.getEmail()});
+            modelo.addRow(new Object[] {
+                    c.getNit(), c.getNombre(), c.getTelefono(), c.getEmail() });
 
         JTable tabla = new JTable(modelo);
         tabla.setRowHeight(26);
@@ -428,11 +447,11 @@ public class NuevaVentaFrame extends JFrame {
         // Botones
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnPanel.setBackground(Color.WHITE);
-        JButton btnElegir   = new JButton("Elegir");
+        JButton btnElegir = new JButton("Elegir");
         JButton btnCancelar = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnElegir,   new Color(34, 85, 153));
+        LoginFrame.estilizarBoton(btnElegir, new Color(34, 85, 153));
         LoginFrame.estilizarBoton(btnCancelar, new Color(120, 120, 120));
-        btnElegir  .setPreferredSize(new Dimension(100, 34));
+        btnElegir.setPreferredSize(new Dimension(100, 34));
         btnCancelar.setPreferredSize(new Dimension(100, 34));
         btnPanel.add(btnCancelar);
         btnPanel.add(btnElegir);
@@ -441,7 +460,7 @@ public class NuevaVentaFrame extends JFrame {
         dlg.add(panel);
 
         // Resultado seleccionado
-        final Cliente[] resultado = {null};
+        final Cliente[] resultado = { null };
 
         Runnable elegir = () -> {
             int fila = tabla.getSelectedRow();
@@ -457,14 +476,16 @@ public class NuevaVentaFrame extends JFrame {
         // Doble clic en la tabla tambien selecciona
         tabla.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) elegir.run();
+                if (e.getClickCount() == 2)
+                    elegir.run();
             }
         });
 
         // Enter en la tabla confirma
         tabla.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) elegir.run();
+                if (e.getKeyCode() == KeyEvent.VK_ENTER)
+                    elegir.run();
             }
         });
 
@@ -503,16 +524,19 @@ public class NuevaVentaFrame extends JFrame {
                 esConsumidorFinal ? new Color(120, 120, 120) : new Color(34, 85, 153));
 
         String info = "NIT: " + c.getNit();
-        if (!c.getTelefono().isBlank()) info += "  |  Tel: " + c.getTelefono();
-        if (!c.getEmail().isBlank())    info += "  |  " + c.getEmail();
-        if (!c.getDireccion().isBlank()) info += "  |  " + c.getDireccion();
+        if (!c.getTelefono().isBlank())
+            info += "  |  Tel: " + c.getTelefono();
+        if (!c.getEmail().isBlank())
+            info += "  |  " + c.getEmail();
+        if (!c.getDireccion().isBlank())
+            info += "  |  " + c.getDireccion();
         lblClienteInfo.setText(info);
 
         // Actualizar titulo del carrito con numero de factura
         if (panelCarritoBorder != null && facturaActual != null) {
             ((TitledBorder) panelCarritoBorder.getBorder())
                     .setTitle("Carrito  —  N° " + facturaActual.getNumero() +
-                              "  |  Cliente: " + c.getNombre());
+                            "  |  Cliente: " + c.getNombre());
             panelCarritoBorder.repaint();
         }
         txtNitBuscar.setText(esConsumidorFinal ? "" : c.getNit());
@@ -536,50 +560,57 @@ public class NuevaVentaFrame extends JFrame {
         g.insets = new Insets(6, 4, 6, 4);
         g.fill = GridBagConstraints.HORIZONTAL;
 
-        JTextField fNit  = campoDlg(nitPrellenado);
-        JTextField fNom  = campoDlg("");
-        JTextField fTel  = campoDlg("");
+        JTextField fNit = campoDlg(nitPrellenado);
+        JTextField fNom = campoDlg("");
+        JTextField fTel = campoDlg("");
         JTextField fMail = campoDlg("");
-        JTextField fDir  = campoDlg("");
+        JTextField fDir = campoDlg("");
 
         // Validacion visual del NIT en tiempo real
         fNit.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
                 boolean ok = fNit.getText().trim().matches("\\d{6,15}");
                 fNit.setBackground(ok ? new Color(230, 255, 230)
-                                      : new Color(255, 230, 230));
+                        : new Color(255, 230, 230));
             }
         });
 
-        String[] etiq = {"NIT / Cedula: *", "Nombre completo: *",
-                         "Telefono:", "Email:", "Direccion:"};
-        JTextField[] campos = {fNit, fNom, fTel, fMail, fDir};
+        String[] etiq = { "NIT / Cedula: *", "Nombre completo: *",
+                "Telefono:", "Email:", "Direccion:" };
+        JTextField[] campos = { fNit, fNom, fTel, fMail, fDir };
         for (int i = 0; i < etiq.length; i++) {
-            g.gridx=0; g.gridy=i; g.weightx=0.35;
+            g.gridx = 0;
+            g.gridy = i;
+            g.weightx = 0.35;
             JLabel lbl = new JLabel(etiq[i]);
             if (etiq[i].endsWith("*"))
                 lbl.setForeground(new Color(34, 85, 153));
             panel.add(lbl, g);
-            g.gridx=1; g.weightx=0.65;
+            g.gridx = 1;
+            g.weightx = 0.65;
             panel.add(campos[i], g);
         }
 
         JLabel lblErr = new JLabel("  * Campos obligatorios", SwingConstants.LEFT);
         lblErr.setFont(new Font("Segoe UI", Font.ITALIC, 10));
         lblErr.setForeground(Color.GRAY);
-        g.gridx=0; g.gridy=etiq.length; g.gridwidth=2;
+        g.gridx = 0;
+        g.gridy = etiq.length;
+        g.gridwidth = 2;
         panel.add(lblErr, g);
 
         JPanel bp = new JPanel(new GridLayout(1, 2, 10, 0));
         bp.setBackground(Color.WHITE);
-        JButton btnOk  = new JButton("Registrar y asignar");
+        JButton btnOk = new JButton("Registrar y asignar");
         JButton btnCan = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnOk,  new Color(30, 130, 76));
+        LoginFrame.estilizarBoton(btnOk, new Color(30, 130, 76));
         LoginFrame.estilizarBoton(btnCan, new Color(120, 120, 120));
-        btnOk .setPreferredSize(new Dimension(0, 36));
+        btnOk.setPreferredSize(new Dimension(0, 36));
         btnCan.setPreferredSize(new Dimension(0, 36));
-        bp.add(btnOk); bp.add(btnCan);
-        g.gridy=etiq.length+1; panel.add(bp, g);
+        bp.add(btnOk);
+        bp.add(btnCan);
+        g.gridy = etiq.length + 1;
+        panel.add(bp, g);
 
         dlg.add(panel);
         btnCan.addActionListener(e -> dlg.dispose());
@@ -589,11 +620,13 @@ public class NuevaVentaFrame extends JFrame {
             String nom = fNom.getText().trim();
             if (!nit.matches("\\d{6,15}")) {
                 lblErr.setText("NIT invalido: solo digitos, minimo 6.");
-                lblErr.setForeground(Color.RED); return;
+                lblErr.setForeground(Color.RED);
+                return;
             }
             if (nom.isEmpty()) {
                 lblErr.setText("El nombre es obligatorio.");
-                lblErr.setForeground(Color.RED); return;
+                lblErr.setForeground(Color.RED);
+                return;
             }
             try {
                 Cliente nuevo = new Cliente(nit, nom,
@@ -615,7 +648,7 @@ public class NuevaVentaFrame extends JFrame {
     }
 
     // =========================================================
-    //  LOGICA CARRITO
+    // LOGICA CARRITO
     // =========================================================
     private void agregarAlCarrito(String idProducto, int cantidad) {
         if (facturaActual == null) {
@@ -625,7 +658,8 @@ public class NuevaVentaFrame extends JFrame {
             return;
         }
         Producto p = sistema.getInventario().buscarProducto(idProducto);
-        if (p == null) return;
+        if (p == null)
+            return;
 
         int yaEnCarrito = itemsCarrito.stream()
                 .filter(i -> i.getProducto().getId().equals(idProducto))
@@ -635,7 +669,7 @@ public class NuevaVentaFrame extends JFrame {
         if (cantidad > stockDisponible) {
             JOptionPane.showMessageDialog(this,
                     "Stock insuficiente.\nDisponible: " + stockDisponible +
-                    (yaEnCarrito > 0 ? "  (ya tiene " + yaEnCarrito + " en el carrito)" : ""),
+                            (yaEnCarrito > 0 ? "  (ya tiene " + yaEnCarrito + " en el carrito)" : ""),
                     "Sin stock", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -644,7 +678,7 @@ public class NuevaVentaFrame extends JFrame {
         facturaActual.agregarItem(item);
         itemsCarrito.add(item);
 
-        modeloItems.addRow(new Object[]{
+        modeloItems.addRow(new Object[] {
                 p.getNombre(), cantidad,
                 String.format("$%,.0f", item.getPrecioUnitario()),
                 String.format("$%,.0f", item.getImpuesto()),
@@ -681,15 +715,16 @@ public class NuevaVentaFrame extends JFrame {
     }
 
     private void actualizarTotales() {
-        if (facturaActual == null) return;
-        lblSubtotal .setText(String.format("$%,.0f", facturaActual.calcularSubtotal()));
-        lblIva      .setText(String.format("$%,.0f", facturaActual.calcularIva()));
-        lblTotal    .setText(String.format("$%,.0f", facturaActual.calcularTotal()));
-        txtMontoPago.setText(String.format("%.0f",   facturaActual.calcularTotal()));
+        if (facturaActual == null)
+            return;
+        lblSubtotal.setText(String.format("$%,.0f", facturaActual.calcularSubtotal()));
+        lblIva.setText(String.format("$%,.0f", facturaActual.calcularIva()));
+        lblTotal.setText(String.format("$%,.0f", facturaActual.calcularTotal()));
+        txtMontoPago.setText(String.format("%.0f", facturaActual.calcularTotal()));
     }
 
     // =========================================================
-    //  BUSQUEDA DE PRODUCTOS
+    // BUSQUEDA DE PRODUCTOS
     // =========================================================
     private void buscarProductos(String texto) {
         modeloProductos.setRowCount(0);
@@ -698,7 +733,7 @@ public class NuevaVentaFrame extends JFrame {
                 : sistema.getInventario().buscarPorNombre(texto);
         for (Producto p : lista)
             if (p.isActivo())
-                modeloProductos.addRow(new Object[]{
+                modeloProductos.addRow(new Object[] {
                         p.getId(), p.getNombre(),
                         String.format("$%,.0f", p.getPrecio()),
                         String.format("%.0f%%", p.getImpuesto() * 100),
@@ -707,7 +742,7 @@ public class NuevaVentaFrame extends JFrame {
     }
 
     // =========================================================
-    //  COBRO
+    // COBRO
     // =========================================================
     private void procesarCobro() {
         if (facturaActual == null || facturaActual.getItems().isEmpty()) {
@@ -732,17 +767,21 @@ public class NuevaVentaFrame extends JFrame {
         } else {
             String digitos = JOptionPane.showInputDialog(this,
                     "Ingrese los ultimos 4 digitos de la tarjeta:");
-            if (digitos == null) return;
+            if (digitos == null)
+                return;
             pago = new PagoTarjeta(digitos,
                     tipoPago.contains("DEBITO") ? "DEBITO" : "CREDITO");
         }
 
         btnCobrar.setEnabled(false);
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
-            @Override protected Boolean doInBackground() throws Exception {
+            @Override
+            protected Boolean doInBackground() throws Exception {
                 return sistema.procesarPago(facturaActual, pago);
             }
-            @Override protected void done() {
+
+            @Override
+            protected void done() {
                 try {
                     if (!get()) {
                         JOptionPane.showMessageDialog(NuevaVentaFrame.this,
@@ -760,17 +799,17 @@ public class NuevaVentaFrame extends JFrame {
                 }
 
                 // ---- Pago exitoso: generar PDFs de forma independiente ----
-                String rutaNormal  = null;
+                String rutaNormal = null;
                 String rutaTermica = null;
 
                 // PDF normal (A4 con colores)
                 try {
-                    rutaNormal = GeneradorReportePDF.generarFacturaPDF(facturaActual);
-                    System.out.println("[PDF] Factura normal generada: " + rutaNormal);
+                    rutaNormal = GeneradorReportePDF.generarFacturaTermica(facturaActual);
+                    System.out.println("[PDF] Factura térmica generada: " + rutaNormal);
                 } catch (Exception ex) {
-                    System.err.println("[PDF] Error factura normal: " + ex.getMessage());
+                    System.err.println("[PDF] Error factura térmica: " + ex.getMessage());
                     JOptionPane.showMessageDialog(NuevaVentaFrame.this,
-                            "Advertencia: No se pudo generar la factura normal.\n" + ex.getMessage(),
+                            "Advertencia: No se pudo generar la factura térmica.\n" + ex.getMessage(),
                             "PDF", JOptionPane.WARNING_MESSAGE);
                 }
 
@@ -787,28 +826,33 @@ public class NuevaVentaFrame extends JFrame {
 
                 // ---- Dialogo de impresion ----
                 String cambioTxt = (pago instanceof PagoEfectivo pe)
-                        ? "\nCambio: $" + String.format("%,.0f", pe.getCambio()) : "";
+                        ? "\nCambio: $" + String.format("%,.0f", pe.getCambio())
+                        : "";
 
                 String msgFacturas = "";
-                if (rutaNormal  != null) msgFacturas += "\nFactura A4:  " + rutaNormal;
-                if (rutaTermica != null) msgFacturas += "\nTicket 80mm: " + rutaTermica;
+                if (rutaNormal != null)
+                    msgFacturas += "\nFactura A4:  " + rutaNormal;
+                if (rutaTermica != null)
+                    msgFacturas += "\nTicket 80mm: " + rutaTermica;
 
                 // Solo mostrar opciones de apertura para los PDFs que se generaron
-                boolean hayNormal  = rutaNormal  != null && new File(rutaNormal).exists();
+                boolean hayNormal = rutaNormal != null && new File(rutaNormal).exists();
                 boolean hayTermica = rutaTermica != null && new File(rutaTermica).exists();
 
                 if (hayNormal || hayTermica) {
                     // Construir opciones dinamicamente segun los PDFs disponibles
                     java.util.List<String> opsList = new java.util.ArrayList<>();
-                    if (hayTermica) opsList.add("Ticket termico (80mm)");
-                    if (hayNormal)  opsList.add("Factura normal (A4)");
+                    if (hayTermica)
+                        opsList.add("Ticket termico (80mm)");
+                    if (hayNormal)
+                        opsList.add("Factura normal (A4)");
                     opsList.add("No imprimir");
                     String[] opciones = opsList.toArray(new String[0]);
 
                     int resp = JOptionPane.showOptionDialog(NuevaVentaFrame.this,
                             "Factura " + facturaActual.getNumero() + " registrada correctamente.\n" +
-                            "Cliente: " + clienteActual.getNombre() + cambioTxt + msgFacturas +
-                            "\n\n¿Que documento desea abrir para imprimir?",
+                                    "Cliente: " + clienteActual.getNombre() + cambioTxt + msgFacturas +
+                                    "\n\n¿Que documento desea abrir para imprimir?",
                             "Venta completada",
                             JOptionPane.DEFAULT_OPTION,
                             JOptionPane.INFORMATION_MESSAGE,
@@ -822,9 +866,11 @@ public class NuevaVentaFrame extends JFrame {
                             else if (resp == 1 && hayNormal)
                                 Desktop.getDesktop().open(new File(rutaNormal));
                         } else if (hayTermica) {
-                            if (resp == 0) Desktop.getDesktop().open(new File(rutaTermica));
+                            if (resp == 0)
+                                Desktop.getDesktop().open(new File(rutaTermica));
                         } else if (hayNormal) {
-                            if (resp == 0) Desktop.getDesktop().open(new File(rutaNormal));
+                            if (resp == 0)
+                                Desktop.getDesktop().open(new File(rutaNormal));
                         }
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(NuevaVentaFrame.this,
@@ -834,8 +880,8 @@ public class NuevaVentaFrame extends JFrame {
                 } else {
                     JOptionPane.showMessageDialog(NuevaVentaFrame.this,
                             "Factura " + facturaActual.getNumero() + " registrada.\n" +
-                            "Cliente: " + clienteActual.getNombre() + cambioTxt +
-                            "\n\nNo se pudieron generar los PDFs.",
+                                    "Cliente: " + clienteActual.getNombre() + cambioTxt +
+                                    "\n\nNo se pudieron generar los PDFs.",
                             "Venta completada", JOptionPane.INFORMATION_MESSAGE);
                 }
 
@@ -851,7 +897,7 @@ public class NuevaVentaFrame extends JFrame {
     }
 
     // =========================================================
-    //  UTILIDADES
+    // UTILIDADES
     // =========================================================
     private int leerCantidad() {
         try {

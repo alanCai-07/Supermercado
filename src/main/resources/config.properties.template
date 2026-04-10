@@ -1,0 +1,55 @@
+# ================================================================
+#  PLANTILLA DE CONFIGURACION - SUPERMERCADO FACTURACION
+#
+#  INSTRUCCIONES:
+#  1. Copia este archivo y renombralo a: config.properties
+#  2. Rellena los valores con tus datos reales
+#  3. NUNCA subas config.properties al repositorio
+#
+#  cp config.properties.template config.properties
+# ================================================================
+
+# ---------------------------------------------------------------
+#  MOTOR DE BASE DE DATOS
+#  Valores validos: postgresql | mysql
+# ---------------------------------------------------------------
+db.motor=postgresql
+
+# ---------------------------------------------------------------
+#  CONEXION (cambia estos valores por los tuyos)
+# ---------------------------------------------------------------
+db.host=localhost
+db.puerto=5432
+db.nombre=supermercado_db
+db.usuario=postgres
+db.password=
+db.schema=public
+
+# ---------------------------------------------------------------
+#  OPCIONES DE CONEXION
+# ---------------------------------------------------------------
+db.zona_horaria=America/Bogota
+db.ssl=false
+db.timeout_conexion=30
+
+# ---------------------------------------------------------------
+#  POOL DE CONEXIONES
+# ---------------------------------------------------------------
+db.conexiones_max=10
+db.conexiones_min=2
+
+# ---------------------------------------------------------------
+#  DATOS DE LA EMPRESA (aparecen en facturas PDF)
+# ---------------------------------------------------------------
+empresa.nombre=NOMBRE DE TU SUPERMERCADO
+empresa.nit=000.000.000-0
+empresa.direccion=Tu direccion aqui
+empresa.telefono=(000) 000-0000
+empresa.email=correo@tuempresa.com
+empresa.regimen=Regimen Simplificado
+
+# ---------------------------------------------------------------
+#  DIRECTORIOS DE SALIDA
+# ---------------------------------------------------------------
+rutas.facturas=reportes/facturas
+rutas.reportes=reportes

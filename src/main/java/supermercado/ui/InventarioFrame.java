@@ -17,30 +17,33 @@ import java.util.List;
 public class InventarioFrame extends JFrame {
 
     private final SistemaFacturacion sistema = SistemaFacturacion.getInstance();
-    private final boolean            esAdmin = sistema.getCajeroActivo().esAdmin();
+    private final boolean esAdmin = sistema.getCajeroActivo().esAdmin();
 
     private DefaultTableModel modelo;
-    private JTable            tabla;
+    private JTable tabla;
     private TableRowSorter<DefaultTableModel> sorter;
-    private JTextField        txtFiltro;
-    private JButton           btnAgregar, btnEditar, btnEliminar, btnAjustarStock;
+    private JTextField txtFiltro;
+    private JButton btnAgregar, btnEditar, btnEliminar, btnAjustarStock;
 
     public InventarioFrame() {
         setTitle("Inventario de Productos" + (esAdmin ? "  [Modo Administrador]" : ""));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
         construirUI();
         // Ajustar tamanio DESPUES de construir la UI para que pack() calcule bien
-        if (esAdmin) setSize(920, 660);
-        else         setSize(880, 580);
+        if (esAdmin)
+            setSize(920, 660);
+        else
+            setSize(880, 580);
+        // Centrar EN LA PANTALLA despues de establecer el tamaño
+        setLocationRelativeTo(null);
     }
 
     private void construirUI() {
         // ================================================================
-        //  ESTRUCTURA PRINCIPAL: BorderLayout con 3 zonas bien definidas
-        //  NORTH  = titulo + filtro
-        //  CENTER = tabla
-        //  SOUTH  = leyenda + botones (apilados con BoxLayout)
+        // ESTRUCTURA PRINCIPAL: BorderLayout con 3 zonas bien definidas
+        // NORTH = titulo + filtro
+        // CENTER = tabla
+        // SOUTH = leyenda + botones (apilados con BoxLayout)
         // ================================================================
         JPanel root = new JPanel(new BorderLayout(0, 8));
         root.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
@@ -65,7 +68,7 @@ public class InventarioFrame extends JFrame {
         badge.setBackground(esAdmin ? new Color(34, 85, 153) : new Color(120, 120, 120));
         badge.setForeground(Color.WHITE);
         filaTitulo.add(titulo, BorderLayout.WEST);
-        filaTitulo.add(badge,  BorderLayout.EAST);
+        filaTitulo.add(badge, BorderLayout.EAST);
         panelNorth.add(filaTitulo);
         panelNorth.add(Box.createVerticalStrut(8));
 
@@ -78,7 +81,7 @@ public class InventarioFrame extends JFrame {
         txtFiltro.setToolTipText("Filtrar por nombre o codigo...");
         JLabel lbF = new JLabel("Buscar: ");
         lbF.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        filaFiltro.add(lbF,       BorderLayout.WEST);
+        filaFiltro.add(lbF, BorderLayout.WEST);
         filaFiltro.add(txtFiltro, BorderLayout.CENTER);
         panelNorth.add(filaFiltro);
         panelNorth.add(Box.createVerticalStrut(4));
@@ -87,9 +90,12 @@ public class InventarioFrame extends JFrame {
 
         // ---- CENTER: tabla ----
         modelo = new DefaultTableModel(
-            new String[]{"Codigo","Nombre","Precio","IVA%",
-                         "Categoria","Stock","Precio c/IVA","Estado"}, 0) {
-            public boolean isCellEditable(int r, int c) { return false; }
+                new String[] { "Codigo", "Nombre", "Precio", "IVA%",
+                        "Categoria", "Stock", "Precio c/IVA", "Estado" },
+                0) {
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         tabla = new JTable(modelo);
         tabla.setRowHeight(26);
@@ -107,8 +113,10 @@ public class InventarioFrame extends JFrame {
             lbl.setOpaque(true);
             lbl.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
             int stockVal = 0;
-            try { stockVal = Integer.parseInt(modelo.getValueAt(row, 5).toString()); }
-            catch (Exception ignored) {}
+            try {
+                stockVal = Integer.parseInt(modelo.getValueAt(row, 5).toString());
+            } catch (Exception ignored) {
+            }
             String estado = modelo.getValueAt(row, 7).toString();
             if (sel) {
                 lbl.setBackground(new Color(184, 207, 229));
@@ -167,32 +175,32 @@ public class InventarioFrame extends JFrame {
         filaBotones.add(btnRecargar);
 
         if (esAdmin) {
-            btnAgregar      = new JButton("+ Agregar");
-            btnEditar       = new JButton("Editar");
+            btnAgregar = new JButton("+ Agregar");
+            btnEditar = new JButton("Editar");
             btnAjustarStock = new JButton("Ajustar stock");
-            btnEliminar     = new JButton("Activar / Desactivar");
+            btnEliminar = new JButton("Activar / Desactivar");
 
             Dimension dimBtn = new Dimension(150, 36);
-            LoginFrame.estilizarBoton(btnAgregar,      new Color(30, 130, 76));
-            LoginFrame.estilizarBoton(btnEditar,        new Color(34, 85, 153));
-            LoginFrame.estilizarBoton(btnAjustarStock,  new Color(140, 80, 10));
-            LoginFrame.estilizarBoton(btnEliminar,      new Color(160, 40, 40));
+            LoginFrame.estilizarBoton(btnAgregar, new Color(30, 130, 76));
+            LoginFrame.estilizarBoton(btnEditar, new Color(34, 85, 153));
+            LoginFrame.estilizarBoton(btnAjustarStock, new Color(140, 80, 10));
+            LoginFrame.estilizarBoton(btnEliminar, new Color(160, 40, 40));
 
-            btnAgregar     .setPreferredSize(dimBtn);
-            btnEditar      .setPreferredSize(dimBtn);
+            btnAgregar.setPreferredSize(dimBtn);
+            btnEditar.setPreferredSize(dimBtn);
             btnAjustarStock.setPreferredSize(dimBtn);
-            btnEliminar    .setPreferredSize(new Dimension(170, 36));
+            btnEliminar.setPreferredSize(new Dimension(170, 36));
 
-            btnEditar      .setEnabled(false);
+            btnEditar.setEnabled(false);
             btnAjustarStock.setEnabled(false);
-            btnEliminar    .setEnabled(false);
+            btnEliminar.setEnabled(false);
 
             // Habilitar al seleccionar fila
             tabla.getSelectionModel().addListSelectionListener(e -> {
                 boolean sel = tabla.getSelectedRow() >= 0;
-                btnEditar      .setEnabled(sel);
+                btnEditar.setEnabled(sel);
                 btnAjustarStock.setEnabled(sel);
-                btnEliminar    .setEnabled(sel);
+                btnEliminar.setEnabled(sel);
             });
 
             // Doble clic = editar
@@ -203,10 +211,10 @@ public class InventarioFrame extends JFrame {
                 }
             });
 
-            btnAgregar     .addActionListener(e -> abrirDialogoProducto(null));
-            btnEditar      .addActionListener(e -> editarSeleccionado());
+            btnAgregar.addActionListener(e -> abrirDialogoProducto(null));
+            btnEditar.addActionListener(e -> editarSeleccionado());
             btnAjustarStock.addActionListener(e -> ajustarStock());
-            btnEliminar    .addActionListener(e -> toggleActivoSeleccionado());
+            btnEliminar.addActionListener(e -> toggleActivoSeleccionado());
 
             filaBotones.add(btnAgregar);
             filaBotones.add(btnEditar);
@@ -223,8 +231,7 @@ public class InventarioFrame extends JFrame {
         txtFiltro.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
                 String txt = txtFiltro.getText().trim();
-                sorter.setRowFilter(txt.isEmpty() ? null :
-                        RowFilter.regexFilter("(?i)" + txt, 0, 1));
+                sorter.setRowFilter(txt.isEmpty() ? null : RowFilter.regexFilter("(?i)" + txt, 0, 1));
             }
         });
 
@@ -233,7 +240,7 @@ public class InventarioFrame extends JFrame {
     }
 
     // =====================================================================
-    //  DATOS
+    // DATOS
     // =====================================================================
     private void recargar() {
         try {
@@ -249,18 +256,18 @@ public class InventarioFrame extends JFrame {
         List<Producto> lista = new ArrayList<>(sistema.getInventario().getTodos().values());
         lista.sort(Comparator.comparing(Producto::getNombre));
         for (Producto p : lista)
-            modelo.addRow(new Object[]{
-                p.getId(), p.getNombre(),
-                String.format("$%,.0f", p.getPrecio()),
-                String.format("%.0f%%",  p.getImpuesto() * 100),
-                p.getCategoria(), p.getStock(),
-                String.format("$%,.0f",  p.getPrecioConIva()),
-                p.isActivo() ? "ACTIVO" : "INACTIVO"
+            modelo.addRow(new Object[] {
+                    p.getId(), p.getNombre(),
+                    String.format("$%,.0f", p.getPrecio()),
+                    String.format("%.0f%%", p.getImpuesto() * 100),
+                    p.getCategoria(), p.getStock(),
+                    String.format("$%,.0f", p.getPrecioConIva()),
+                    p.isActivo() ? "ACTIVO" : "INACTIVO"
             });
     }
 
     // =====================================================================
-    //  DIALOGO AGREGAR / EDITAR
+    // DIALOGO AGREGAR / EDITAR
     // =====================================================================
     private void abrirDialogoProducto(Producto prod) {
         boolean nuevo = (prod == null);
@@ -276,55 +283,68 @@ public class InventarioFrame extends JFrame {
         g.insets = new Insets(6, 4, 6, 4);
         g.fill = GridBagConstraints.HORIZONTAL;
 
-        JTextField txtCod    = campo(nuevo ? "" : prod.getId());
-        JTextField txtNom    = campo(nuevo ? "" : prod.getNombre());
+        JTextField txtCod = campo(nuevo ? "" : prod.getId());
+        JTextField txtNom = campo(nuevo ? "" : prod.getNombre());
         JTextField txtPrecio = campo(nuevo ? "" : String.format("%.0f", prod.getPrecio()));
-        JTextField txtStock  = campo(nuevo ? "0" : String.valueOf(prod.getStock()));
+        JTextField txtStock = campo(nuevo ? "0" : String.valueOf(prod.getStock()));
 
         txtCod.setEditable(nuevo);
-        if (!nuevo) txtCod.setBackground(new Color(235, 235, 235));
+        if (!nuevo)
+            txtCod.setBackground(new Color(235, 235, 235));
 
         Map<Integer, String> cats = cargarCategorias();
         JComboBox<String> cmbCat = new JComboBox<>(cats.values().toArray(new String[0]));
         if (!nuevo) {
             int i = 0;
             for (String v : cats.values()) {
-                if (v.equals(prod.getCategoria())) { cmbCat.setSelectedIndex(i); break; }
+                if (v.equals(prod.getCategoria())) {
+                    cmbCat.setSelectedIndex(i);
+                    break;
+                }
                 i++;
             }
         }
 
-        JComboBox<String> cmbIva = new JComboBox<>(new String[]{"0%  - Exento", "5%", "19%"});
+        JComboBox<String> cmbIva = new JComboBox<>(new String[] { "0%  - Exento", "5%", "19%" });
         if (!nuevo) {
-            if      (prod.getImpuesto() >= 0.19) cmbIva.setSelectedIndex(2);
-            else if (prod.getImpuesto() >= 0.05) cmbIva.setSelectedIndex(1);
-            else                                  cmbIva.setSelectedIndex(0);
+            if (prod.getImpuesto() >= 0.19)
+                cmbIva.setSelectedIndex(2);
+            else if (prod.getImpuesto() >= 0.05)
+                cmbIva.setSelectedIndex(1);
+            else
+                cmbIva.setSelectedIndex(0);
         }
 
-        String[]    etiq = {"Codigo:", "Nombre:", "Precio ($):", "Stock:", "Categoria:", "IVA:"};
-        Component[] ctrl = {txtCod, txtNom, txtPrecio, txtStock, cmbCat, cmbIva};
+        String[] etiq = { "Codigo:", "Nombre:", "Precio ($):", "Stock:", "Categoria:", "IVA:" };
+        Component[] ctrl = { txtCod, txtNom, txtPrecio, txtStock, cmbCat, cmbIva };
         for (int i = 0; i < etiq.length; i++) {
-            g.gridx = 0; g.gridy = i; g.weightx = 0.35;
+            g.gridx = 0;
+            g.gridy = i;
+            g.weightx = 0.35;
             panel.add(new JLabel(etiq[i]), g);
-            g.gridx = 1; g.weightx = 0.65;
+            g.gridx = 1;
+            g.weightx = 0.65;
             panel.add(ctrl[i], g);
         }
 
         JLabel lblErr = new JLabel(" ", SwingConstants.CENTER);
         lblErr.setForeground(Color.RED);
         lblErr.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        g.gridx = 0; g.gridy = etiq.length; g.gridwidth = 2;
+        g.gridx = 0;
+        g.gridy = etiq.length;
+        g.gridwidth = 2;
         panel.add(lblErr, g);
 
         JPanel bp = new JPanel(new GridLayout(1, 2, 10, 0));
         bp.setBackground(Color.WHITE);
-        JButton btnOk  = new JButton(nuevo ? "Agregar" : "Guardar cambios");
+        JButton btnOk = new JButton(nuevo ? "Agregar" : "Guardar cambios");
         JButton btnCan = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnOk,  new Color(30, 130, 76));
+        LoginFrame.estilizarBoton(btnOk, new Color(30, 130, 76));
         LoginFrame.estilizarBoton(btnCan, new Color(120, 120, 120));
-        btnOk .setPreferredSize(new Dimension(0, 36));
+        btnOk.setPreferredSize(new Dimension(0, 36));
         btnCan.setPreferredSize(new Dimension(0, 36));
-        bp.add(btnOk); bp.add(btnCan);
+        bp.add(btnOk);
+        bp.add(btnCan);
         g.gridy = etiq.length + 1;
         panel.add(bp, g);
 
@@ -338,15 +358,31 @@ public class InventarioFrame extends JFrame {
             String stS = txtStock.getText().trim();
 
             if (cod.isEmpty() || nom.isEmpty() || prS.isEmpty()) {
-                lblErr.setText("Codigo, nombre y precio son obligatorios."); return;
+                lblErr.setText("Codigo, nombre y precio son obligatorios.");
+                return;
             }
-            double pr; int st;
-            try { pr = Double.parseDouble(prS); }
-            catch (NumberFormatException ex) { lblErr.setText("Precio invalido."); return; }
-            try { st = Integer.parseInt(stS); }
-            catch (NumberFormatException ex) { lblErr.setText("Stock invalido."); return; }
-            if (pr <= 0) { lblErr.setText("El precio debe ser mayor a 0."); return; }
-            if (st < 0)  { lblErr.setText("El stock no puede ser negativo."); return; }
+            double pr;
+            int st;
+            try {
+                pr = Double.parseDouble(prS);
+            } catch (NumberFormatException ex) {
+                lblErr.setText("Precio invalido.");
+                return;
+            }
+            try {
+                st = Integer.parseInt(stS);
+            } catch (NumberFormatException ex) {
+                lblErr.setText("Stock invalido.");
+                return;
+            }
+            if (pr <= 0) {
+                lblErr.setText("El precio debe ser mayor a 0.");
+                return;
+            }
+            if (st < 0) {
+                lblErr.setText("El stock no puede ser negativo.");
+                return;
+            }
 
             String catNom = (String) cmbCat.getSelectedItem();
             int idCat = cats.entrySet().stream()
@@ -354,13 +390,15 @@ public class InventarioFrame extends JFrame {
                     .mapToInt(Map.Entry::getKey).findFirst().orElse(1);
 
             try {
-                if (nuevo) insertarProducto(cod, nom, pr, st, idCat);
-                else       actualizarProducto(prod.getId(), nom, pr, st, idCat);
+                if (nuevo)
+                    insertarProducto(cod, nom, pr, st, idCat);
+                else
+                    actualizarProducto(prod.getId(), nom, pr, st, idCat);
                 recargar();
                 dlg.dispose();
                 JOptionPane.showMessageDialog(this,
                         nuevo ? "Producto \"" + nom + "\" agregado correctamente."
-                              : "Producto \"" + nom + "\" actualizado correctamente.",
+                                : "Producto \"" + nom + "\" actualizado correctamente.",
                         "Exito", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception ex) {
                 lblErr.setText("Error: " + ex.getMessage());
@@ -371,14 +409,15 @@ public class InventarioFrame extends JFrame {
     }
 
     // =====================================================================
-    //  DIALOGO AJUSTAR STOCK
+    // DIALOGO AJUSTAR STOCK
     // =====================================================================
     private void ajustarStock() {
         int fila = tabla.convertRowIndexToModel(tabla.getSelectedRow());
-        if (fila < 0) return;
-        String id     = (String) modelo.getValueAt(fila, 0);
+        if (fila < 0)
+            return;
+        String id = (String) modelo.getValueAt(fila, 0);
         String nombre = (String) modelo.getValueAt(fila, 1);
-        int    actual = (int)    modelo.getValueAt(fila, 5);
+        int actual = (int) modelo.getValueAt(fila, 5);
 
         JDialog dlg = new JDialog(this, "Ajustar stock — " + nombre, true);
         dlg.setSize(340, 240);
@@ -396,38 +435,59 @@ public class InventarioFrame extends JFrame {
         lblAct.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lblAct.setForeground(new Color(34, 85, 153));
 
-        JComboBox<String> cmbOp = new JComboBox<>(new String[]{
-            "Establecer cantidad exacta", "Agregar unidades", "Restar unidades"});
+        JComboBox<String> cmbOp = new JComboBox<>(new String[] {
+                "Establecer cantidad exacta", "Agregar unidades", "Restar unidades" });
         JTextField txtCant = campo("0");
         JLabel lblErr = new JLabel(" ", SwingConstants.CENTER);
         lblErr.setForeground(Color.RED);
 
-        g.gridx=0; g.gridy=0; g.gridwidth=2; panel.add(lblAct, g);
-        g.gridy=1; panel.add(cmbOp, g);
-        g.gridwidth=1; g.gridy=2;
-        g.gridx=0; g.weightx=0.4; panel.add(new JLabel("Cantidad:"), g);
-        g.gridx=1; g.weightx=0.6; panel.add(txtCant, g);
-        g.gridx=0; g.gridy=3; g.gridwidth=2; panel.add(lblErr, g);
+        g.gridx = 0;
+        g.gridy = 0;
+        g.gridwidth = 2;
+        panel.add(lblAct, g);
+        g.gridy = 1;
+        panel.add(cmbOp, g);
+        g.gridwidth = 1;
+        g.gridy = 2;
+        g.gridx = 0;
+        g.weightx = 0.4;
+        panel.add(new JLabel("Cantidad:"), g);
+        g.gridx = 1;
+        g.weightx = 0.6;
+        panel.add(txtCant, g);
+        g.gridx = 0;
+        g.gridy = 3;
+        g.gridwidth = 2;
+        panel.add(lblErr, g);
 
         JPanel bp = new JPanel(new GridLayout(1, 2, 8, 0));
         bp.setBackground(Color.WHITE);
-        JButton btnOk  = new JButton("Aplicar");
+        JButton btnOk = new JButton("Aplicar");
         JButton btnCan = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnOk,  new Color(140, 80, 10));
+        LoginFrame.estilizarBoton(btnOk, new Color(140, 80, 10));
         LoginFrame.estilizarBoton(btnCan, new Color(120, 120, 120));
-        btnOk .setPreferredSize(new Dimension(0, 36));
+        btnOk.setPreferredSize(new Dimension(0, 36));
         btnCan.setPreferredSize(new Dimension(0, 36));
-        bp.add(btnOk); bp.add(btnCan);
-        g.gridy=4; panel.add(bp, g);
+        bp.add(btnOk);
+        bp.add(btnCan);
+        g.gridy = 4;
+        panel.add(bp, g);
 
         dlg.add(panel);
         btnCan.addActionListener(e -> dlg.dispose());
 
         btnOk.addActionListener(e -> {
             int cant;
-            try { cant = Integer.parseInt(txtCant.getText().trim()); }
-            catch (NumberFormatException ex) { lblErr.setText("Cantidad invalida."); return; }
-            if (cant < 0) { lblErr.setText("Ingrese un numero positivo."); return; }
+            try {
+                cant = Integer.parseInt(txtCant.getText().trim());
+            } catch (NumberFormatException ex) {
+                lblErr.setText("Cantidad invalida.");
+                return;
+            }
+            if (cant < 0) {
+                lblErr.setText("Ingrese un numero positivo.");
+                return;
+            }
 
             int nuevo = switch (cmbOp.getSelectedIndex()) {
                 case 0 -> cant;
@@ -437,79 +497,97 @@ public class InventarioFrame extends JFrame {
             };
             try {
                 PreparedStatement ps = ConexionDB.getConexion()
-                    .prepareStatement("UPDATE productos SET stock=? WHERE id_producto=?");
-                ps.setInt(1, nuevo); ps.setString(2, id); ps.executeUpdate();
-                recargar(); dlg.dispose();
+                        .prepareStatement("UPDATE productos SET stock=? WHERE id_producto=?");
+                ps.setInt(1, nuevo);
+                ps.setString(2, id);
+                ps.executeUpdate();
+                recargar();
+                dlg.dispose();
                 JOptionPane.showMessageDialog(this,
-                    "Stock de \"" + nombre + "\" actualizado: " + actual + " → " + nuevo,
-                    "Exito", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) { lblErr.setText("Error: " + ex.getMessage()); }
+                        "Stock de \"" + nombre + "\" actualizado: " + actual + " → " + nuevo,
+                        "Exito", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                lblErr.setText("Error: " + ex.getMessage());
+            }
         });
 
         dlg.setVisible(true);
     }
 
     // =====================================================================
-    //  ACTIVAR / DESACTIVAR
+    // ACTIVAR / DESACTIVAR
     // =====================================================================
     private void toggleActivoSeleccionado() {
         int fila = tabla.convertRowIndexToModel(tabla.getSelectedRow());
-        if (fila < 0) return;
-        String id     = (String) modelo.getValueAt(fila, 0);
+        if (fila < 0)
+            return;
+        String id = (String) modelo.getValueAt(fila, 0);
         String nombre = (String) modelo.getValueAt(fila, 1);
         boolean activo = "ACTIVO".equals(modelo.getValueAt(fila, 7));
-        String accion  = activo ? "desactivar" : "reactivar";
+        String accion = activo ? "desactivar" : "reactivar";
 
         int r = JOptionPane.showConfirmDialog(this,
                 "¿Desea " + accion + " el producto:\n\"" + nombre + "\"?\n\n" +
-                (activo ? "No aparecera en nuevas ventas."
-                        : "Volvera a estar disponible para ventas."),
+                        (activo ? "No aparecera en nuevas ventas."
+                                : "Volvera a estar disponible para ventas."),
                 "Confirmar " + accion,
                 JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (r != JOptionPane.YES_OPTION) return;
+        if (r != JOptionPane.YES_OPTION)
+            return;
 
         try {
             PreparedStatement ps = ConexionDB.getConexion()
-                .prepareStatement("UPDATE productos SET activo=? WHERE id_producto=?");
-            ps.setInt(1, activo ? 0 : 1); ps.setString(2, id); ps.executeUpdate();
+                    .prepareStatement("UPDATE productos SET activo=? WHERE id_producto=?");
+            ps.setInt(1, activo ? 0 : 1);
+            ps.setString(2, id);
+            ps.executeUpdate();
             recargar();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(),
-                "Error", JOptionPane.ERROR_MESSAGE);
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void editarSeleccionado() {
         int fila = tabla.convertRowIndexToModel(tabla.getSelectedRow());
-        if (fila < 0) return;
+        if (fila < 0)
+            return;
         Producto p = sistema.getInventario().buscarProducto(
                 (String) modelo.getValueAt(fila, 0));
-        if (p != null) abrirDialogoProducto(p);
+        if (p != null)
+            abrirDialogoProducto(p);
     }
 
     // =====================================================================
-    //  OPERACIONES BD
+    // OPERACIONES BD
     // =====================================================================
     private void insertarProducto(String id, String nombre, double precio,
-                                   int stock, int idCat) throws Exception {
+            int stock, int idCat) throws Exception {
         ResultSet rs = ConexionDB.getConexion().createStatement()
-                .executeQuery("SELECT id_producto FROM productos WHERE id_producto='" + id + "'");
-        if (rs.next()) throw new Exception("Ya existe el codigo " + id);
+                .executeQuery("SELECT id_producto FROM supermercado.productos WHERE id_producto='" + id + "'");
+        if (rs.next())
+            throw new Exception("Ya existe el codigo " + id);
 
         PreparedStatement ps = ConexionDB.getConexion().prepareStatement(
-            "INSERT INTO productos (id_producto,nombre,precio,stock,id_categoria,activo) " +
-            "VALUES (?,?,?,?,?,1)");
-        ps.setString(1, id); ps.setString(2, nombre); ps.setDouble(3, precio);
-        ps.setInt(4, stock); ps.setInt(5, idCat);
+                "INSERT INTO supermercado.productos (id_producto,nombre,precio,stock,id_categoria,activo) " +
+                        "VALUES (?,?,?,?,?,true)");
+        ps.setString(1, id);
+        ps.setString(2, nombre);
+        ps.setDouble(3, precio);
+        ps.setInt(4, stock);
+        ps.setInt(5, idCat);
         ps.executeUpdate();
     }
 
     private void actualizarProducto(String id, String nombre, double precio,
-                                     int stock, int idCat) throws Exception {
+            int stock, int idCat) throws Exception {
         PreparedStatement ps = ConexionDB.getConexion().prepareStatement(
-            "UPDATE productos SET nombre=?,precio=?,stock=?,id_categoria=? WHERE id_producto=?");
-        ps.setString(1, nombre); ps.setDouble(2, precio);
-        ps.setInt(3, stock); ps.setInt(4, idCat); ps.setString(5, id);
+                "UPDATE supermercado.productos SET nombre=?,precio=?,stock=?,id_categoria=? WHERE id_producto=?");
+        ps.setString(1, nombre);
+        ps.setDouble(2, precio);
+        ps.setInt(3, stock);
+        ps.setInt(4, idCat);
+        ps.setString(5, id);
         ps.executeUpdate();
     }
 
@@ -517,14 +595,17 @@ public class InventarioFrame extends JFrame {
         Map<Integer, String> cats = new LinkedHashMap<>();
         try {
             ResultSet rs = ConexionDB.getConexion().createStatement()
-                    .executeQuery("SELECT id_categoria, nombre FROM categorias ORDER BY nombre");
-            while (rs.next()) cats.put(rs.getInt(1), rs.getString(2));
-        } catch (Exception ex) { cats.put(1, "General"); }
+                    .executeQuery("SELECT id_categoria, nombre FROM supermercado.categorias ORDER BY nombre");
+            while (rs.next())
+                cats.put(rs.getInt(1), rs.getString(2));
+        } catch (Exception ex) {
+            cats.put(1, "General");
+        }
         return cats;
     }
 
     // =====================================================================
-    //  UTILIDADES
+    // UTILIDADES
     // =====================================================================
     private JTextField campo(String v) {
         JTextField t = new JTextField(v, 16);
