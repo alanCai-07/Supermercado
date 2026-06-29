@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Main",
+            "request": "launch",
+            "mainClass": "supermercado.Main",
+            "projectName": "supermercado-facturacion"
+        }
+    ]
+}

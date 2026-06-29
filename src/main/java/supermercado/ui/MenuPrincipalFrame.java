@@ -1,9 +1,21 @@
 package supermercado.ui;
 
-import supermercado.servicio.SistemaFacturacion;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+
+import supermercado.servicio.SistemaFacturacion;
 
 public class MenuPrincipalFrame extends JFrame {
 
@@ -17,6 +29,7 @@ public class MenuPrincipalFrame extends JFrame {
                 setTitle("Supermercado - Menu Principal  |  Cajero: " + cajero);
                 setSize(700, 500);
                 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                setIconImage(AppIcon.getIcon());
                 construirUI(cajero);
                 // Centrar en la pantalla DESPUÉS de establecer el tamaño
                 setLocationRelativeTo(null);

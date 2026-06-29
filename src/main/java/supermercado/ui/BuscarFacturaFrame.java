@@ -1,20 +1,39 @@
 package supermercado.ui;
 
-import supermercado.dao.FacturaDAO;
-import supermercado.modelo.EstadoFactura;
-import supermercado.reporte.GeneradorReportePDF;
-import supermercado.servicio.SistemaFacturacion;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.util.Arrays;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
-import java.awt.*;
-import java.awt.Desktop;
-import java.awt.event.*;
-import java.io.File;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
+
+import supermercado.dao.FacturaDAO;
+import supermercado.modelo.EstadoFactura;
+import supermercado.servicio.SistemaFacturacion;
 
 public class BuscarFacturaFrame extends JFrame {
 
@@ -51,6 +70,7 @@ public class BuscarFacturaFrame extends JFrame {
         setTitle("Historial de Facturas");
         setSize(1150, 720);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
         construirUI();
         // Centrar en la pantalla DESPUÉS de establecer el tamaño
         setLocationRelativeTo(null);
@@ -75,7 +95,8 @@ public class BuscarFacturaFrame extends JFrame {
     // BARRA SUPERIOR: filtros + botones de accion
     // =========================================================
     private JPanel construirBarra() {
-        JPanel barra = new JPanel(new BorderLayout(0, 0));
+        JPanel barra = new JPanel();
+        barra.setLayout(new BoxLayout(barra, BoxLayout.X_AXIS));
         barra.setBackground(new Color(34, 85, 153));
         barra.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
         barra.setPreferredSize(new Dimension(0, 70));
@@ -94,7 +115,7 @@ public class BuscarFacturaFrame extends JFrame {
         lbF.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         txtFiltro = new JTextField(14);
-        LoginFrame.estilizarCampo(txtFiltro);
+        UIUtils.estilizarCampo(txtFiltro);
         txtFiltro.setToolTipText("Filtrar por N° factura, cliente o NIT...");
         txtFiltro.setPreferredSize(new Dimension(180, 28));
 
@@ -107,7 +128,7 @@ public class BuscarFacturaFrame extends JFrame {
         cmbEstado.setPreferredSize(new Dimension(120, 28));
 
         JButton btnRecargar = new JButton("Recargar");
-        LoginFrame.estilizarBoton(btnRecargar, new Color(60, 60, 120));
+        UIUtils.estilizarBoton(btnRecargar, new Color(60, 60, 120));
         btnRecargar.setPreferredSize(new Dimension(100, 30));
 
         panelFiltros.add(titulo);
@@ -117,9 +138,7 @@ public class BuscarFacturaFrame extends JFrame {
         panelFiltros.add(lbE);
         panelFiltros.add(cmbEstado);
         panelFiltros.add(btnRecargar);
-        barra.add(panelFiltros, BorderLayout.WEST);
 
-        // ---- BOTONES DE ACCION (siempre visibles en la barra) ----
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         panelBotones.setOpaque(false);
 
@@ -128,10 +147,10 @@ public class BuscarFacturaFrame extends JFrame {
         btnAnular = new JButton("Anular Factura");
         btnCambiarEstado = new JButton("Cambiar Estado");
 
-        LoginFrame.estilizarBoton(btnVerPDF, new Color(30, 100, 180));
-        LoginFrame.estilizarBoton(btnVerTermica, new Color(80, 130, 80));
-        LoginFrame.estilizarBoton(btnAnular, new Color(180, 40, 40));
-        LoginFrame.estilizarBoton(btnCambiarEstado, new Color(160, 100, 20));
+        UIUtils.estilizarBoton(btnVerPDF, new Color(30, 100, 180));
+        UIUtils.estilizarBoton(btnVerTermica, new Color(80, 130, 80));
+        UIUtils.estilizarBoton(btnAnular, new Color(180, 40, 40));
+        UIUtils.estilizarBoton(btnCambiarEstado, new Color(160, 100, 20));
 
         Dimension dimBtn = new Dimension(160, 30);
         btnVerPDF.setPreferredSize(dimBtn);
@@ -151,7 +170,10 @@ public class BuscarFacturaFrame extends JFrame {
             panelBotones.add(btnCambiarEstado);
             panelBotones.add(btnAnular);
         }
-        barra.add(panelBotones, BorderLayout.EAST);
+
+        barra.add(panelFiltros);
+        barra.add(Box.createHorizontalGlue());
+        barra.add(panelBotones);
 
         // Acciones filtros
         txtFiltro.addKeyListener(new KeyAdapter() {
@@ -348,9 +370,7 @@ public class BuscarFacturaFrame extends JFrame {
         lblEstadoDet.setForeground(colorEstado(estado));
 
         // Habilitar botones
-        boolean esPagada = "PAGADA".equals(estado);
         boolean esAnulada = "ANULADA".equals(estado);
-        boolean esPendiente = "PENDIENTE".equals(estado);
 
         btnVerPDF.setEnabled(true);
         btnVerTermica.setEnabled(true);

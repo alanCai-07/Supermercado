@@ -1,18 +1,50 @@
 package supermercado.ui;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
+
 import supermercado.db.ConexionDB;
 import supermercado.modelo.Producto;
 import supermercado.servicio.SistemaFacturacion;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableRowSorter;
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.*;
-import java.util.List;
 
 public class InventarioFrame extends JFrame {
 
@@ -28,6 +60,7 @@ public class InventarioFrame extends JFrame {
     public InventarioFrame() {
         setTitle("Inventario de Productos" + (esAdmin ? "  [Modo Administrador]" : ""));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
         construirUI();
         // Ajustar tamanio DESPUES de construir la UI para que pack() calcule bien
         if (esAdmin)
@@ -77,7 +110,7 @@ public class InventarioFrame extends JFrame {
         filaFiltro.setBackground(Color.WHITE);
         filaFiltro.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
         txtFiltro = new JTextField();
-        LoginFrame.estilizarCampo(txtFiltro);
+        UIUtils.estilizarCampo(txtFiltro);
         txtFiltro.setToolTipText("Filtrar por nombre o codigo...");
         JLabel lbF = new JLabel("Buscar: ");
         lbF.setFont(new Font("Segoe UI", Font.PLAIN, 12));
@@ -170,7 +203,7 @@ public class InventarioFrame extends JFrame {
         filaBotones.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JButton btnRecargar = new JButton("Recargar");
-        LoginFrame.estilizarBoton(btnRecargar, new Color(80, 80, 80));
+        UIUtils.estilizarBoton(btnRecargar, new Color(80, 80, 80));
         btnRecargar.setPreferredSize(new Dimension(110, 36));
         filaBotones.add(btnRecargar);
 
@@ -181,10 +214,10 @@ public class InventarioFrame extends JFrame {
             btnEliminar = new JButton("Activar / Desactivar");
 
             Dimension dimBtn = new Dimension(150, 36);
-            LoginFrame.estilizarBoton(btnAgregar, new Color(30, 130, 76));
-            LoginFrame.estilizarBoton(btnEditar, new Color(34, 85, 153));
-            LoginFrame.estilizarBoton(btnAjustarStock, new Color(140, 80, 10));
-            LoginFrame.estilizarBoton(btnEliminar, new Color(160, 40, 40));
+            UIUtils.estilizarBoton(btnAgregar, new Color(30, 130, 76));
+            UIUtils.estilizarBoton(btnEditar, new Color(34, 85, 153));
+            UIUtils.estilizarBoton(btnAjustarStock, new Color(140, 80, 10));
+            UIUtils.estilizarBoton(btnEliminar, new Color(160, 40, 40));
 
             btnAgregar.setPreferredSize(dimBtn);
             btnEditar.setPreferredSize(dimBtn);
@@ -339,8 +372,8 @@ public class InventarioFrame extends JFrame {
         bp.setBackground(Color.WHITE);
         JButton btnOk = new JButton(nuevo ? "Agregar" : "Guardar cambios");
         JButton btnCan = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnOk, new Color(30, 130, 76));
-        LoginFrame.estilizarBoton(btnCan, new Color(120, 120, 120));
+        UIUtils.estilizarBoton(btnOk, new Color(30, 130, 76));
+        UIUtils.estilizarBoton(btnCan, new Color(120, 120, 120));
         btnOk.setPreferredSize(new Dimension(0, 36));
         btnCan.setPreferredSize(new Dimension(0, 36));
         bp.add(btnOk);
@@ -464,8 +497,8 @@ public class InventarioFrame extends JFrame {
         bp.setBackground(Color.WHITE);
         JButton btnOk = new JButton("Aplicar");
         JButton btnCan = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnOk, new Color(140, 80, 10));
-        LoginFrame.estilizarBoton(btnCan, new Color(120, 120, 120));
+        UIUtils.estilizarBoton(btnOk, new Color(140, 80, 10));
+        UIUtils.estilizarBoton(btnCan, new Color(120, 120, 120));
         btnOk.setPreferredSize(new Dimension(0, 36));
         btnCan.setPreferredSize(new Dimension(0, 36));
         bp.add(btnOk);
@@ -609,7 +642,7 @@ public class InventarioFrame extends JFrame {
     // =====================================================================
     private JTextField campo(String v) {
         JTextField t = new JTextField(v, 16);
-        LoginFrame.estilizarCampo(t);
+        UIUtils.estilizarCampo(t);
         return t;
     }
 

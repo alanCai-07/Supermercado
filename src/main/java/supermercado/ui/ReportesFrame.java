@@ -1,13 +1,28 @@
 package supermercado.ui;
 
-import supermercado.reporte.GeneradorReportePDF;
-import supermercado.servicio.SistemaFacturacion;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
+
+import supermercado.reporte.GeneradorReportePDF;
+import supermercado.servicio.SistemaFacturacion;
 
 public class ReportesFrame extends JFrame {
 
@@ -19,6 +34,7 @@ public class ReportesFrame extends JFrame {
         setTitle("Generar Reportes PDF");
         setSize(520, 420);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
         setResizable(false);
         construirUI();
         // Centrar en la pantalla DESPUÉS de establecer el tamaño
@@ -46,8 +62,8 @@ public class ReportesFrame extends JFrame {
 
         txtDesde = new JTextField(primerDiaMes, 12);
         txtHasta = new JTextField(hoy, 12);
-        LoginFrame.estilizarCampo(txtDesde);
-        LoginFrame.estilizarCampo(txtHasta);
+        UIUtils.estilizarCampo(txtDesde);
+        UIUtils.estilizarCampo(txtHasta);
 
         panelFechas.add(new JLabel("Desde:"));
         panelFechas.add(txtDesde);
@@ -142,7 +158,7 @@ public class ReportesFrame extends JFrame {
 
     private JButton boton(String texto, Color color) {
         JButton b = new JButton(texto);
-        LoginFrame.estilizarBoton(b, color);
+        UIUtils.estilizarBoton(b, color);
         b.setPreferredSize(new Dimension(0, 42));
         return b;
     }

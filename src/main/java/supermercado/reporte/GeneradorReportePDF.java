@@ -1,22 +1,30 @@
 package supermercado.reporte;
 
-import com.itextpdf.kernel.colors.*;
-import com.itextpdf.kernel.font.*;
-import com.itextpdf.kernel.geom.PageSize;
-import com.itextpdf.kernel.pdf.*;
-import com.itextpdf.layout.*;
-import com.itextpdf.layout.borders.*;
-import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.properties.*;
-import supermercado.dao.FacturaDAO;
-import supermercado.modelo.Factura;
-import supermercado.modelo.ItemFactura;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.DeviceRgb;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.HorizontalAlignment;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+
+import supermercado.dao.FacturaDAO;
+import supermercado.modelo.Factura;
+import supermercado.modelo.ItemFactura;
 
 public class GeneradorReportePDF {
 
@@ -25,7 +33,6 @@ public class GeneradorReportePDF {
 
         // Colores corporativos
         private static final DeviceRgb COLOR_HEADER = new DeviceRgb(34, 85, 153); // azul oscuro
-        private static final DeviceRgb COLOR_SUBHEAD = new DeviceRgb(70, 130, 180); // azul medio
         private static final DeviceRgb COLOR_ROW_PAR = new DeviceRgb(235, 242, 250); // azul muy claro
         private static final DeviceRgb COLOR_TOTAL = new DeviceRgb(220, 235, 255); // azul pastel
         private static final DeviceRgb COLOR_TEXT_H = new DeviceRgb(255, 255, 255); // blanco

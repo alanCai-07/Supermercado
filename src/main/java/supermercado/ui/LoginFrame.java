@@ -1,26 +1,47 @@
 package supermercado.ui;
 
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.UIManager;
+
 import supermercado.dao.CajeroDAO;
 import supermercado.db.ConexionDB;
 import supermercado.servicio.SistemaFacturacion;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
-
 public class LoginFrame extends JFrame {
 
     private JComboBox<String> cmbNombre;
-    private JPasswordField    txtPass;
-    private JButton           btnLogin;
-    private JButton           btnRecargar;
-    private JLabel            lblError;
+    private JPasswordField txtPass;
+    private JButton btnLogin;
+    private JButton btnRecargar;
+    private JLabel lblError;
 
     public LoginFrame() {
         setTitle("Supermercado — Inicio de sesion");
         setSize(420, 360);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
         setLocationRelativeTo(null);
         setResizable(false);
         construirUI();
@@ -41,7 +62,9 @@ public class LoginFrame extends JFrame {
         JLabel titulo = new JLabel("SUPERMERCADO EL EXITO", SwingConstants.CENTER);
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 17));
         titulo.setForeground(new Color(34, 85, 153));
-        g.gridx = 0; g.gridy = 0; g.gridwidth = 2;
+        g.gridx = 0;
+        g.gridy = 0;
+        g.gridwidth = 2;
         panel.add(titulo, g);
 
         JLabel sub = new JLabel("Sistema de Facturacion", SwingConstants.CENTER);
@@ -57,29 +80,38 @@ public class LoginFrame extends JFrame {
         g.insets = new Insets(6, 0, 6, 0);
 
         // Combo usuario
-        g.gridwidth = 1; g.gridy = 3; g.gridx = 0; g.weightx = 0.38;
+        g.gridwidth = 1;
+        g.gridy = 3;
+        g.gridx = 0;
+        g.weightx = 0.38;
         panel.add(new JLabel("Usuario:"), g);
 
-        cmbNombre = new JComboBox<>(new String[]{"Cargando..."});
+        cmbNombre = new JComboBox<>(new String[] { "Cargando..." });
         cmbNombre.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         cmbNombre.setEnabled(false);
-        g.gridx = 1; g.weightx = 0.62;
+        g.gridx = 1;
+        g.weightx = 0.62;
         panel.add(cmbNombre, g);
 
         // Contrasena
-        g.gridy = 4; g.gridx = 0; g.weightx = 0.38;
+        g.gridy = 4;
+        g.gridx = 0;
+        g.weightx = 0.38;
         panel.add(new JLabel("Contrasena:"), g);
 
         txtPass = new JPasswordField();
         estilizarCampo(txtPass);
-        g.gridx = 1; g.weightx = 0.62;
+        g.gridx = 1;
+        g.weightx = 0.62;
         panel.add(txtPass, g);
 
         // Label error / info
         lblError = new JLabel("Conectando a la base de datos...", SwingConstants.CENTER);
         lblError.setForeground(new Color(100, 100, 100));
         lblError.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-        g.gridy = 5; g.gridx = 0; g.gridwidth = 2;
+        g.gridy = 5;
+        g.gridx = 0;
+        g.gridwidth = 2;
         panel.add(lblError, g);
 
         // Panel botones: Recargar + Ingresar
@@ -87,10 +119,10 @@ public class LoginFrame extends JFrame {
         panelBtns.setBackground(Color.WHITE);
 
         btnRecargar = new JButton("Recargar");
-        btnLogin    = new JButton("Ingresar");
+        btnLogin = new JButton("Ingresar");
         estilizarBoton(btnRecargar, new Color(100, 100, 100));
-        estilizarBoton(btnLogin,    new Color(34, 85, 153));
-        btnLogin   .setEnabled(false);
+        estilizarBoton(btnLogin, new Color(34, 85, 153));
+        btnLogin.setEnabled(false);
         btnRecargar.setEnabled(false);
 
         panelBtns.add(btnRecargar);
@@ -102,18 +134,18 @@ public class LoginFrame extends JFrame {
         add(panel);
 
         // Acciones
-        btnLogin   .addActionListener(e -> intentarLogin());
+        btnLogin.addActionListener(e -> intentarLogin());
         btnRecargar.addActionListener(e -> cargarNombresAsync());
-        txtPass    .addActionListener(e -> intentarLogin());
+        txtPass.addActionListener(e -> intentarLogin());
     }
 
     // =========================================================
-    //  CARGA DE CAJEROS EN HILO SEPARADO
+    // CARGA DE CAJEROS EN HILO SEPARADO
     // =========================================================
     private void cargarNombresAsync() {
         // Resetear estado visual
-        cmbNombre  .setEnabled(false);
-        btnLogin   .setEnabled(false);
+        cmbNombre.setEnabled(false);
+        btnLogin.setEnabled(false);
         btnRecargar.setEnabled(false);
         lblError.setText("Conectando a la base de datos...");
         lblError.setForeground(new Color(100, 100, 100));
@@ -140,7 +172,8 @@ public class LoginFrame extends JFrame {
                         lblError.setText("No hay cajeros activos en la BD.");
                         lblError.setForeground(Color.ORANGE.darker());
                     } else {
-                        for (String n : nombres) cmbNombre.addItem(n);
+                        for (String n : nombres)
+                            cmbNombre.addItem(n);
                         cmbNombre.setEnabled(true);
                         btnLogin.setEnabled(true);
                         lblError.setText("Seleccione su usuario e ingrese la contrasena.");
@@ -163,11 +196,11 @@ public class LoginFrame extends JFrame {
                     // Mostrar dialogo con el error completo
                     JOptionPane.showMessageDialog(LoginFrame.this,
                             "No se pudo conectar a la base de datos.\n\n"
-                            + "Verifique:\n"
-                            + "  1. Que PostgreSQL / MySQL este corriendo\n"
-                            + "  2. Que el archivo config.properties exista\n"
-                            + "  3. Que el usuario y password sean correctos\n\n"
-                            + "Detalle: " + msg,
+                                    + "Verifique:\n"
+                                    + "  1. Que PostgreSQL / MySQL este corriendo\n"
+                                    + "  2. Que el archivo config.properties exista\n"
+                                    + "  3. Que el usuario y password sean correctos\n\n"
+                                    + "Detalle: " + msg,
                             "Error de conexion",
                             JOptionPane.ERROR_MESSAGE);
                 } finally {
@@ -179,11 +212,11 @@ public class LoginFrame extends JFrame {
     }
 
     // =========================================================
-    //  LOGIN
+    // LOGIN
     // =========================================================
     private void intentarLogin() {
         String nombre = (String) cmbNombre.getSelectedItem();
-        String pass   = new String(txtPass.getPassword());
+        String pass = new String(txtPass.getPassword());
 
         if (nombre == null || nombre.startsWith("(") || pass.isEmpty()) {
             lblError.setText("Seleccione un usuario e ingrese la contrasena.");
@@ -191,16 +224,19 @@ public class LoginFrame extends JFrame {
             return;
         }
 
-        btnLogin   .setEnabled(false);
-        btnLogin   .setText("Verificando...");
+        btnLogin.setEnabled(false);
+        btnLogin.setText("Verificando...");
         btnRecargar.setEnabled(false);
-        lblError   .setText(" ");
+        lblError.setText(" ");
 
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
-            @Override protected Boolean doInBackground() throws Exception {
+            @Override
+            protected Boolean doInBackground() throws Exception {
                 return SistemaFacturacion.getInstance().login(nombre, pass);
             }
-            @Override protected void done() {
+
+            @Override
+            protected void done() {
                 try {
                     if (get()) {
                         dispose();
@@ -227,7 +263,7 @@ public class LoginFrame extends JFrame {
     }
 
     // =========================================================
-    //  UTILIDADES ESTATICAS (usadas por otras pantallas)
+    // UTILIDADES ESTATICAS (usadas por otras pantallas)
     // =========================================================
     public static void estilizarCampo(JTextField campo) {
         campo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -247,14 +283,17 @@ public class LoginFrame extends JFrame {
     }
 
     private static String truncar(String s, int max) {
-        if (s == null) return "Sin detalles";
+        if (s == null)
+            return "Sin detalles";
         return s.length() > max ? s.substring(0, max) + "..." : s;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
-            catch (Exception ignored) {}
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ignored) {
+            }
             new LoginFrame().setVisible(true);
         });
     }
