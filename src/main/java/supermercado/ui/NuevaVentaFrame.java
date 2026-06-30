@@ -1,20 +1,53 @@
 package supermercado.ui;
 
-import supermercado.dao.ClienteDAO;
-import supermercado.modelo.*;
-import supermercado.pago.*;
-import supermercado.reporte.GeneradorReportePDF;
-import supermercado.servicio.SistemaFacturacion;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Desktop;
-import java.awt.event.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
+
+import supermercado.dao.ClienteDAO;
+import supermercado.modelo.Cliente;
+import supermercado.modelo.Factura;
+import supermercado.modelo.ItemFactura;
+import supermercado.modelo.Producto;
+import supermercado.pago.MetodoPago;
+import supermercado.pago.PagoEfectivo;
+import supermercado.pago.PagoTarjeta;
+import supermercado.reporte.GeneradorReportePDF;
+import supermercado.servicio.SistemaFacturacion;
 
 public class NuevaVentaFrame extends JFrame {
 
@@ -57,6 +90,7 @@ public class NuevaVentaFrame extends JFrame {
         setTitle("Nueva Venta");
         setSize(1050, 740);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
         setLocationRelativeTo(parent);
         construirUI();
         // Iniciar con consumidor final por defecto
@@ -107,16 +141,16 @@ public class NuevaVentaFrame extends JFrame {
         JLabel lblNit = new JLabel("NIT o Nombre:");
         lblNit.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         txtNitBuscar = new JTextField(16);
-        LoginFrame.estilizarCampo(txtNitBuscar);
+        UIUtils.estilizarCampo(txtNitBuscar);
         txtNitBuscar.setToolTipText("Ingrese el NIT/CC (numeros) o el nombre del cliente y presione Buscar");
 
         btnBuscarCliente = new JButton("Buscar cliente");
         btnNuevoCliente = new JButton("+ Nuevo cliente");
         btnConsumidorFinal = new JButton("Consumidor final");
 
-        LoginFrame.estilizarBoton(btnBuscarCliente, new Color(34, 85, 153));
-        LoginFrame.estilizarBoton(btnNuevoCliente, new Color(30, 130, 76));
-        LoginFrame.estilizarBoton(btnConsumidorFinal, new Color(100, 100, 100));
+        UIUtils.estilizarBoton(btnBuscarCliente, new Color(34, 85, 153));
+        UIUtils.estilizarBoton(btnNuevoCliente, new Color(30, 130, 76));
+        UIUtils.estilizarBoton(btnConsumidorFinal, new Color(100, 100, 100));
 
         Dimension dimBtn = new Dimension(150, 30);
         btnBuscarCliente.setPreferredSize(dimBtn);
@@ -169,9 +203,9 @@ public class NuevaVentaFrame extends JFrame {
         JPanel barraBusq = new JPanel(new BorderLayout(4, 0));
         barraBusq.setBackground(Color.WHITE);
         txtBuscarProducto = new JTextField();
-        LoginFrame.estilizarCampo(txtBuscarProducto);
+        UIUtils.estilizarCampo(txtBuscarProducto);
         JButton btnBuscar = new JButton("Buscar");
-        LoginFrame.estilizarBoton(btnBuscar, new Color(34, 85, 153));
+        UIUtils.estilizarBoton(btnBuscar, new Color(34, 85, 153));
         barraBusq.add(new JLabel("Buscar: "), BorderLayout.WEST);
         barraBusq.add(txtBuscarProducto, BorderLayout.CENTER);
         barraBusq.add(btnBuscar, BorderLayout.EAST);
@@ -200,7 +234,7 @@ public class NuevaVentaFrame extends JFrame {
         panelAgregar.setBackground(Color.WHITE);
 
         txtCant = new JTextField("1", 6);
-        LoginFrame.estilizarCampo(txtCant);
+        UIUtils.estilizarCampo(txtCant);
         txtCant.setHorizontalAlignment(JTextField.CENTER);
         txtCant.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
@@ -210,7 +244,7 @@ public class NuevaVentaFrame extends JFrame {
         estilizarBtnCant(btnMas, new Color(30, 130, 76));
 
         JButton btnAgregar = new JButton("  Agregar al carrito  ");
-        LoginFrame.estilizarBoton(btnAgregar, new Color(30, 130, 76));
+        UIUtils.estilizarBoton(btnAgregar, new Color(30, 130, 76));
         btnAgregar.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnAgregar.setPreferredSize(new Dimension(180, 34));
 
@@ -284,7 +318,7 @@ public class NuevaVentaFrame extends JFrame {
         panelCarritoBorder.add(new JScrollPane(tablaItems), BorderLayout.CENTER);
 
         JButton btnEliminar = new JButton("Eliminar item seleccionado");
-        LoginFrame.estilizarBoton(btnEliminar, new Color(170, 40, 40));
+        UIUtils.estilizarBoton(btnEliminar, new Color(170, 40, 40));
         btnEliminar.addActionListener(e -> eliminarItemSeleccionado());
         panelCarritoBorder.add(btnEliminar, BorderLayout.SOUTH);
 
@@ -319,9 +353,9 @@ public class NuevaVentaFrame extends JFrame {
         cmbPago = new JComboBox<>(new String[] {
                 "EFECTIVO", "TARJETA_DEBITO", "TARJETA_CREDITO" });
         txtMontoPago = new JTextField("0", 12);
-        LoginFrame.estilizarCampo(txtMontoPago);
+        UIUtils.estilizarCampo(txtMontoPago);
         btnCobrar = new JButton("COBRAR");
-        LoginFrame.estilizarBoton(btnCobrar, new Color(34, 85, 153));
+        UIUtils.estilizarBoton(btnCobrar, new Color(34, 85, 153));
         btnCobrar.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btnCobrar.setPreferredSize(new Dimension(0, 46));
 
@@ -449,8 +483,8 @@ public class NuevaVentaFrame extends JFrame {
         btnPanel.setBackground(Color.WHITE);
         JButton btnElegir = new JButton("Elegir");
         JButton btnCancelar = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnElegir, new Color(34, 85, 153));
-        LoginFrame.estilizarBoton(btnCancelar, new Color(120, 120, 120));
+        UIUtils.estilizarBoton(btnElegir, new Color(34, 85, 153));
+        UIUtils.estilizarBoton(btnCancelar, new Color(120, 120, 120));
         btnElegir.setPreferredSize(new Dimension(100, 34));
         btnCancelar.setPreferredSize(new Dimension(100, 34));
         btnPanel.add(btnCancelar);
@@ -603,8 +637,8 @@ public class NuevaVentaFrame extends JFrame {
         bp.setBackground(Color.WHITE);
         JButton btnOk = new JButton("Registrar y asignar");
         JButton btnCan = new JButton("Cancelar");
-        LoginFrame.estilizarBoton(btnOk, new Color(30, 130, 76));
-        LoginFrame.estilizarBoton(btnCan, new Color(120, 120, 120));
+        UIUtils.estilizarBoton(btnOk, new Color(30, 130, 76));
+        UIUtils.estilizarBoton(btnCan, new Color(120, 120, 120));
         btnOk.setPreferredSize(new Dimension(0, 36));
         btnCan.setPreferredSize(new Dimension(0, 36));
         bp.add(btnOk);
@@ -925,7 +959,7 @@ public class NuevaVentaFrame extends JFrame {
 
     private JTextField campoDlg(String valor) {
         JTextField t = new JTextField(valor, 18);
-        LoginFrame.estilizarCampo(t);
+        UIUtils.estilizarCampo(t);
         return t;
     }
 }

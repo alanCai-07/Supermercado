@@ -1,9 +1,8 @@
 {
-    "version": "0.2.0",
     "configurations": [
         {
             "type": "java",
-            "name": "Lanzar Sistema Facturacion",
+            "name": "Main",
             "request": "launch",
             "mainClass": "supermercado.Main",
             "projectName": "supermercado-facturacion"

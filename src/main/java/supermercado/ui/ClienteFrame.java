@@ -1,10 +1,22 @@
 package supermercado.ui;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+
 import supermercado.dao.ClienteDAO;
 import supermercado.modelo.Cliente;
-
-import javax.swing.*;
-import java.awt.*;
 
 public class ClienteFrame extends JFrame {
 
@@ -15,6 +27,7 @@ public class ClienteFrame extends JFrame {
         setTitle("Registrar / Buscar Cliente");
         setSize(440, 380);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
         setResizable(false);
         construirUI();
         // Centrar en la pantalla DESPUÉS de establecer el tamaño
@@ -67,8 +80,8 @@ public class ClienteFrame extends JFrame {
         btnPanel.setBackground(Color.WHITE);
         JButton btnBuscar = new JButton("Buscar por NIT");
         JButton btnGuardar = new JButton("Guardar");
-        LoginFrame.estilizarBoton(btnBuscar, new Color(80, 80, 150));
-        LoginFrame.estilizarBoton(btnGuardar, new Color(30, 130, 76));
+        UIUtils.estilizarBoton(btnBuscar, new Color(80, 80, 150));
+        UIUtils.estilizarBoton(btnGuardar, new Color(30, 130, 76));
         btnPanel.add(btnBuscar);
         btnPanel.add(btnGuardar);
         g.gridy = 7;
@@ -123,7 +136,7 @@ public class ClienteFrame extends JFrame {
 
     private JTextField campo() {
         JTextField t = new JTextField(18);
-        LoginFrame.estilizarCampo(t);
+        UIUtils.estilizarCampo(t);
         return t;
     }
 }

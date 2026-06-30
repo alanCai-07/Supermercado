@@ -1,9 +1,11 @@
 package supermercado;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import supermercado.db.ConexionDB;
 import supermercado.ui.LoginFrame;
-
-import javax.swing.*;
 
 /**
  * Punto de entrada principal del sistema de facturacion.
