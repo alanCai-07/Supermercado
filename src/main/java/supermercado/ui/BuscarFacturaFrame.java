@@ -14,7 +14,6 @@ import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -68,7 +67,8 @@ public class BuscarFacturaFrame extends JFrame {
 
     public BuscarFacturaFrame() {
         setTitle("Historial de Facturas");
-        setSize(1150, 720);
+        setSize(1600, 720);
+        setMinimumSize(new Dimension(1200, 720));
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setIconImage(AppIcon.getIcon());
         construirUI();
@@ -95,8 +95,7 @@ public class BuscarFacturaFrame extends JFrame {
     // BARRA SUPERIOR: filtros + botones de accion
     // =========================================================
     private JPanel construirBarra() {
-        JPanel barra = new JPanel();
-        barra.setLayout(new BoxLayout(barra, BoxLayout.X_AXIS));
+        JPanel barra = new JPanel(new BorderLayout());
         barra.setBackground(new Color(34, 85, 153));
         barra.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
         barra.setPreferredSize(new Dimension(0, 70));
@@ -128,8 +127,10 @@ public class BuscarFacturaFrame extends JFrame {
         cmbEstado.setPreferredSize(new Dimension(120, 28));
 
         JButton btnRecargar = new JButton("Recargar");
-        UIUtils.estilizarBoton(btnRecargar, new Color(60, 60, 120));
-        btnRecargar.setPreferredSize(new Dimension(100, 30));
+        UIUtils.estilizarBoton(btnRecargar, new Color(70, 70, 130));
+        btnRecargar.setPreferredSize(new Dimension(120, 30));
+        btnRecargar.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        btnRecargar.setToolTipText("Recargar lista de facturas");
 
         panelFiltros.add(titulo);
         panelFiltros.add(Box.createHorizontalStrut(14));
@@ -171,9 +172,8 @@ public class BuscarFacturaFrame extends JFrame {
             panelBotones.add(btnAnular);
         }
 
-        barra.add(panelFiltros);
-        barra.add(Box.createHorizontalGlue());
-        barra.add(panelBotones);
+        barra.add(panelFiltros, BorderLayout.WEST);
+        barra.add(panelBotones, BorderLayout.EAST);
 
         // Acciones filtros
         txtFiltro.addKeyListener(new KeyAdapter() {
