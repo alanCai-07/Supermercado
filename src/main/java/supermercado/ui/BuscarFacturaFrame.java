@@ -14,6 +14,7 @@ import java.util.Arrays;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -66,15 +67,14 @@ public class BuscarFacturaFrame extends JFrame {
     private String[] filaActual = null;
 
     public BuscarFacturaFrame() {
-        setTitle("Historial de Facturas");
-        setSize(1600, 720);
-        setMinimumSize(new Dimension(1200, 720));
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setIconImage(AppIcon.getIcon());
-        construirUI();
-        // Centrar en la pantalla DESPUÉS de establecer el tamaño
-        setLocationRelativeTo(null);
-        cargarFacturas();
+    setTitle("Historial de Facturas");
+    setSize(1600, 760);                         
+    setMinimumSize(new Dimension(1100, 760));     
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    setIconImage(AppIcon.getIcon());
+    construirUI();
+    setLocationRelativeTo(null);
+    cargarFacturas();
     }
 
     // =========================================================
@@ -94,20 +94,20 @@ public class BuscarFacturaFrame extends JFrame {
     // =========================================================
     // BARRA SUPERIOR: filtros + botones de accion
     // =========================================================
+
     private JPanel construirBarra() {
-        JPanel barra = new JPanel(new BorderLayout());
+        JPanel barra = new JPanel();
+        barra.setLayout(new BoxLayout(barra, BoxLayout.Y_AXIS));
         barra.setBackground(new Color(34, 85, 153));
         barra.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
-        barra.setPreferredSize(new Dimension(0, 70));
 
-        // Titulo
+        // ---- FILA 1: Titulo + filtros ----
+        JPanel fila1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        fila1.setOpaque(false);
+
         JLabel titulo = new JLabel("Historial de Facturas");
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 15));
         titulo.setForeground(Color.WHITE);
-
-        // Filtros
-        JPanel panelFiltros = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-        panelFiltros.setOpaque(false);
 
         JLabel lbF = new JLabel("Buscar:");
         lbF.setForeground(Color.WHITE);
@@ -132,16 +132,17 @@ public class BuscarFacturaFrame extends JFrame {
         btnRecargar.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         btnRecargar.setToolTipText("Recargar lista de facturas");
 
-        panelFiltros.add(titulo);
-        panelFiltros.add(Box.createHorizontalStrut(14));
-        panelFiltros.add(lbF);
-        panelFiltros.add(txtFiltro);
-        panelFiltros.add(lbE);
-        panelFiltros.add(cmbEstado);
-        panelFiltros.add(btnRecargar);
+        fila1.add(titulo);
+        fila1.add(Box.createHorizontalStrut(14));
+        fila1.add(lbF);
+        fila1.add(txtFiltro);
+        fila1.add(lbE);
+        fila1.add(cmbEstado);
+        fila1.add(btnRecargar);
 
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        panelBotones.setOpaque(false);
+        // ---- FILA 2: Botones de accion ----
+        JPanel fila2 = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+        fila2.setOpaque(false);
 
         btnVerPDF = new JButton("Ver Factura PDF");
         btnVerTermica = new JButton("Ver Ticket Termico");
@@ -153,27 +154,26 @@ public class BuscarFacturaFrame extends JFrame {
         UIUtils.estilizarBoton(btnAnular, new Color(180, 40, 40));
         UIUtils.estilizarBoton(btnCambiarEstado, new Color(160, 100, 20));
 
-        Dimension dimBtn = new Dimension(160, 30);
+        Dimension dimBtn = new Dimension(170, 32);
         btnVerPDF.setPreferredSize(dimBtn);
         btnVerTermica.setPreferredSize(dimBtn);
         btnAnular.setPreferredSize(dimBtn);
         btnCambiarEstado.setPreferredSize(dimBtn);
 
-        // Deshabilitados hasta que se seleccione una fila
         btnVerPDF.setEnabled(false);
         btnVerTermica.setEnabled(false);
         btnAnular.setEnabled(false);
         btnCambiarEstado.setEnabled(false);
 
-        panelBotones.add(btnVerPDF);
-        panelBotones.add(btnVerTermica);
+        fila2.add(btnVerPDF);
+        fila2.add(btnVerTermica);
         if (esAdmin) {
-            panelBotones.add(btnCambiarEstado);
-            panelBotones.add(btnAnular);
+            fila2.add(btnCambiarEstado);
+            fila2.add(btnAnular);
         }
 
-        barra.add(panelFiltros, BorderLayout.WEST);
-        barra.add(panelBotones, BorderLayout.EAST);
+        barra.add(fila1);
+        barra.add(fila2);
 
         // Acciones filtros
         txtFiltro.addKeyListener(new KeyAdapter() {
