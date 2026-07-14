@@ -23,6 +23,7 @@ import javax.swing.SwingWorker;
 
 import supermercado.reporte.GeneradorReportePDF;
 import supermercado.servicio.SistemaFacturacion;
+import supermercado.reporte.GeneradorReporteExcel;
 
 public class ReportesFrame extends JFrame {
 
@@ -114,46 +115,62 @@ public class ReportesFrame extends JFrame {
         lblEstado.setForeground(new Color(34, 85, 153));
         final LocalDate d = desde, h = hasta;
 
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
-            @Override
-            protected String doInBackground() throws Exception {
-                return switch (tipo) {
-                    case "DIARIO" -> GeneradorReportePDF.reporteVentasDiarias(
-                            LocalDate.now(), sistema.getFacturaDAO());
-                    case "PRODUCTOS" -> GeneradorReportePDF.reporteTopProductos(
-                            d, h, sistema.getFacturaDAO());
-                    case "CAJERO" -> GeneradorReportePDF.reporteVentasPorCajero(
-                            d, h, sistema.getFacturaDAO());
-                    default -> throw new Exception("Tipo desconocido");
-                };
+        SwingWorker<String[], Void> worker = new SwingWorker<>() {
+    @Override
+    protected String[] doInBackground() throws Exception {
+        String rutaPdf, rutaExcel;
+        switch (tipo) {
+            case "DIARIO" -> {
+                rutaPdf = GeneradorReportePDF.reporteVentasDiarias(LocalDate.now(), sistema.getFacturaDAO());
+                rutaExcel = GeneradorReporteExcel.reporteVentasDiariasExcel(LocalDate.now(), sistema.getFacturaDAO());
             }
-
-            @Override
-            protected void done() {
-                try {
-                    String ruta = get();
-                    lblEstado.setText("PDF generado: " + ruta);
-                    lblEstado.setForeground(new Color(30, 130, 76));
-
-                    int resp = JOptionPane.showConfirmDialog(ReportesFrame.this,
-                            "Reporte generado exitosamente.\nRuta: " + ruta +
-                                    "\n\n¿Desea abrir el archivo?",
-                            "Exito", JOptionPane.YES_NO_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE);
-
-                    if (resp == JOptionPane.YES_OPTION) {
-                        Desktop.getDesktop().open(new File(ruta));
-                    }
-                } catch (Exception ex) {
-                    lblEstado.setText("Error: " + ex.getMessage());
-                    lblEstado.setForeground(Color.RED);
-                    JOptionPane.showMessageDialog(ReportesFrame.this,
-                            "Error al generar PDF: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
+            case "PRODUCTOS" -> {
+                rutaPdf = GeneradorReportePDF.reporteTopProductos(d, h, sistema.getFacturaDAO());
+                rutaExcel = GeneradorReporteExcel.reporteTopProductosExcel(d, h, sistema.getFacturaDAO());
             }
-        };
-        worker.execute();
+            case "CAJERO" -> {
+                rutaPdf = GeneradorReportePDF.reporteVentasPorCajero(d, h, sistema.getFacturaDAO());
+                rutaExcel = GeneradorReporteExcel.reporteVentasPorCajeroExcel(d, h, sistema.getFacturaDAO());
+            }
+            default -> throw new Exception("Tipo desconocido");
+        }
+        return new String[] { rutaPdf, rutaExcel };
+    }
+
+    @Override
+    protected void done() {
+        try {
+            String[] rutas = get();
+            String rutaPdf = rutas[0];
+            String rutaExcel = rutas[1];
+
+            lblEstado.setText("PDF y Excel generados correctamente.");
+            lblEstado.setForeground(new Color(30, 130, 76));
+
+            String[] opciones = { "Abrir PDF", "Abrir Excel", "Cerrar" };
+            int resp = JOptionPane.showOptionDialog(ReportesFrame.this,
+                    "Reporte generado exitosamente.\n\n" +
+                            "PDF:   " + rutaPdf + "\n" +
+                            "Excel: " + rutaExcel,
+                    "Exito", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE, null, opciones, opciones[0]);
+
+            if (resp == 0)
+                Desktop.getDesktop().open(new File(rutaPdf));
+            else if (resp == 1)
+                Desktop.getDesktop().open(new File(rutaExcel));
+
+        } catch (Exception ex) {
+            lblEstado.setText("Error: " + ex.getMessage());
+            lblEstado.setForeground(Color.RED);
+            JOptionPane.showMessageDialog(ReportesFrame.this,
+                    "Error al generar reportes: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+};
+    worker.execute();
+
     }
 
     private JButton boton(String texto, Color color) {
