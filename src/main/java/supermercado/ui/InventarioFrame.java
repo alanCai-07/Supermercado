@@ -14,6 +14,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ import javax.swing.table.TableRowSorter;
 import supermercado.db.ConexionDB;
 import supermercado.modelo.Producto;
 import supermercado.servicio.SistemaFacturacion;
+import java.io.File;
 
 public class InventarioFrame extends JFrame {
 
@@ -305,7 +307,7 @@ public class InventarioFrame extends JFrame {
     private void abrirDialogoProducto(Producto prod) {
         boolean nuevo = (prod == null);
         JDialog dlg = new JDialog(this, nuevo ? "Agregar producto" : "Editar producto", true);
-        dlg.setSize(430, 370);
+        dlg.setSize(430, 500);
         dlg.setLocationRelativeTo(this);
         dlg.setResizable(false);
 
@@ -320,6 +322,33 @@ public class InventarioFrame extends JFrame {
         JTextField txtNom = campo(nuevo ? "" : prod.getNombre());
         JTextField txtPrecio = campo(nuevo ? "" : String.format("%.0f", prod.getPrecio()));
         JTextField txtStock = campo(nuevo ? "0" : String.valueOf(prod.getStock()));
+
+        // ---- Selector de imagen ----
+JLabel lblPreview = new JLabel("Sin imagen", SwingConstants.CENTER);
+lblPreview.setPreferredSize(new Dimension(90, 90));
+lblPreview.setBorder(BorderFactory.createLineBorder(new Color(180, 190, 210)));
+lblPreview.setFont(new Font("Segoe UI", Font.ITALIC, 10));
+
+final File[] imagenSeleccionada = { null }; // referencia mutable para el listener
+
+if (!nuevo && prod.getRutaImagen() != null) {
+    File imgActual = supermercado.util.GestorImagenes.obtenerArchivo(prod.getRutaImagen());
+    if (imgActual != null)
+        setPreview(lblPreview, imgActual);
+}
+
+    JButton btnImagen = new JButton("Seleccionar imagen...");
+UIUtils.estilizarBoton(btnImagen, new Color(80, 80, 150));
+btnImagen.addActionListener(e -> {
+    javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+    chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+            "Imagenes", "jpg", "jpeg", "png"));
+    int res = chooser.showOpenDialog(dlg);
+    if (res == javax.swing.JFileChooser.APPROVE_OPTION) {
+        imagenSeleccionada[0] = chooser.getSelectedFile();
+        setPreview(lblPreview, imagenSeleccionada[0]);
+    }
+});
 
         txtCod.setEditable(nuevo);
         if (!nuevo)
@@ -337,6 +366,9 @@ public class InventarioFrame extends JFrame {
                 i++;
             }
         }
+
+        
+
 
         JComboBox<String> cmbIva = new JComboBox<>(new String[] { "0%  - Exento", "5%", "19%" });
         if (!nuevo) {
@@ -364,9 +396,25 @@ public class InventarioFrame extends JFrame {
         lblErr.setForeground(Color.RED);
         lblErr.setFont(new Font("Segoe UI", Font.ITALIC, 11));
         g.gridx = 0;
-        g.gridy = etiq.length;
+        g.gridy = etiq.length + 2;
         g.gridwidth = 2;
         panel.add(lblErr, g);
+
+
+        g.gridx = 0;
+        g.gridy = etiq.length;
+        panel.add(new JLabel("Imagen:"), g);
+        g.gridx = 1;
+        panel.add(btnImagen, g);
+
+        g.gridx = 0;
+        g.gridy = etiq.length + 1;
+        g.gridwidth = 2;
+        g.anchor = GridBagConstraints.CENTER;
+        panel.add(lblPreview, g);
+        g.anchor = GridBagConstraints.WEST;
+
+
 
         JPanel bp = new JPanel(new GridLayout(1, 2, 10, 0));
         bp.setBackground(Color.WHITE);
@@ -378,7 +426,7 @@ public class InventarioFrame extends JFrame {
         btnCan.setPreferredSize(new Dimension(0, 36));
         bp.add(btnOk);
         bp.add(btnCan);
-        g.gridy = etiq.length + 1;
+        g.gridy = etiq.length + 3;
         panel.add(bp, g);
 
         dlg.add(panel);
@@ -422,11 +470,21 @@ public class InventarioFrame extends JFrame {
                     .filter(en -> en.getValue().equals(catNom))
                     .mapToInt(Map.Entry::getKey).findFirst().orElse(1);
 
+            String rutaImagenFinal = nuevo ? null : prod.getRutaImagen();
+                if (imagenSeleccionada[0] != null) {
+                 try {
+                    rutaImagenFinal = supermercado.util.GestorImagenes
+                    .guardarImagenProducto(cod, imagenSeleccionada[0]);
+                     } catch (Exception exImg) {
+                 lblErr.setText("Error al guardar imagen: " + exImg.getMessage());
+        return;
+    }
+}
             try {
                 if (nuevo)
-                    insertarProducto(cod, nom, pr, st, idCat);
+                    insertarProducto(cod, nom, pr, st, idCat , rutaImagenFinal);
                 else
-                    actualizarProducto(prod.getId(), nom, pr, st, idCat);
+                    actualizarProducto(prod.getId(), nom, pr, st, idCat, rutaImagenFinal);
                 recargar();
                 dlg.dispose();
                 JOptionPane.showMessageDialog(this,
@@ -595,32 +653,34 @@ public class InventarioFrame extends JFrame {
     // OPERACIONES BD
     // =====================================================================
     private void insertarProducto(String id, String nombre, double precio,
-            int stock, int idCat) throws Exception {
+            int stock, int idCat, String rutaImagen) throws Exception {
         ResultSet rs = ConexionDB.getConexion().createStatement()
                 .executeQuery("SELECT id_producto FROM supermercado.productos WHERE id_producto='" + id + "'");
         if (rs.next())
             throw new Exception("Ya existe el codigo " + id);
 
         PreparedStatement ps = ConexionDB.getConexion().prepareStatement(
-                "INSERT INTO supermercado.productos (id_producto,nombre,precio,stock,id_categoria,activo) " +
-                        "VALUES (?,?,?,?,?,true)");
+                "INSERT INTO supermercado.productos (id_producto,nombre,precio,stock,id_categoria,activo,ruta_imagen) " +
+                        "VALUES (?,?,?,?,?,true,?)");
         ps.setString(1, id);
         ps.setString(2, nombre);
         ps.setDouble(3, precio);
         ps.setInt(4, stock);
         ps.setInt(5, idCat);
+        ps.setString(6, rutaImagen);
         ps.executeUpdate();
     }
 
     private void actualizarProducto(String id, String nombre, double precio,
-            int stock, int idCat) throws Exception {
+            int stock, int idCat, String rutaImagen) throws Exception {
         PreparedStatement ps = ConexionDB.getConexion().prepareStatement(
                 "UPDATE supermercado.productos SET nombre=?,precio=?,stock=?,id_categoria=? WHERE id_producto=?");
         ps.setString(1, nombre);
         ps.setDouble(2, precio);
         ps.setInt(3, stock);
         ps.setInt(4, idCat);
-        ps.setString(5, id);
+        ps.setString(5, rutaImagen);
+        ps.setString(6, id);
         ps.executeUpdate();
     }
 
@@ -654,4 +714,18 @@ public class InventarioFrame extends JFrame {
         l.setBorder(BorderFactory.createLineBorder(bg.darker(), 1));
         return l;
     }
+
+    private void setPreview(JLabel label, File archivo) {
+        try {
+        java.awt.Image img = new javax.swing.ImageIcon(archivo.getAbsolutePath())
+                .getImage().getScaledInstance(90, 90, java.awt.Image.SCALE_SMOOTH);
+        label.setIcon(new javax.swing.ImageIcon(img));
+        label.setText(null);
+        } catch (Exception ex) {
+        label.setIcon(null);
+        label.setText("Sin imagen");
+    }
+
+    
+}
 }
