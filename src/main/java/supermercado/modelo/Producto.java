@@ -6,9 +6,10 @@ public class Producto {
     private String  nombre;
     private double  precio;
     private String  categoria;
-    private double  impuesto;   // 0.19 = 19% IVA
+    private double  impuesto;
     private int     stock;
     private boolean activo;
+    private String  rutaImagen;   // NUEVO: ruta relativa del archivo de imagen
 
     public Producto(String id, String nombre, double precio,
                     String categoria, double impuesto, int stock) {
@@ -19,6 +20,7 @@ public class Producto {
         this.impuesto  = impuesto;
         this.stock     = stock;
         this.activo    = true;
+        this.rutaImagen = null;
     }
 
     public double getPrecioConIva() {
@@ -26,18 +28,20 @@ public class Producto {
     }
 
     // ---- Getters ----
-    public String  getId()        { return id; }
-    public String  getNombre()    { return nombre; }
-    public double  getPrecio()    { return precio; }
-    public String  getCategoria() { return categoria; }
-    public double  getImpuesto()  { return impuesto; }
-    public int     getStock()     { return stock; }
-    public boolean isActivo()     { return activo; }
+    public String  getId()          { return id; }
+    public String  getNombre()      { return nombre; }
+    public double  getPrecio()      { return precio; }
+    public String  getCategoria()   { return categoria; }
+    public double  getImpuesto()    { return impuesto; }
+    public int     getStock()       { return stock; }
+    public boolean isActivo()       { return activo; }
+    public String  getRutaImagen()  { return rutaImagen; }
 
     // ---- Setters ----
-    public void setStock(int stock)     { this.stock  = stock; }
-    public void setActivo(boolean a)    { this.activo = a; }
-    public void setPrecio(double p)     { this.precio = p; }
+    public void setStock(int stock)          { this.stock      = stock; }
+    public void setActivo(boolean a)         { this.activo     = a; }
+    public void setPrecio(double p)          { this.precio     = p; }
+    public void setRutaImagen(String ruta)   { this.rutaImagen = ruta; }
 
     @Override
     public String toString() {
