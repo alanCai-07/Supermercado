@@ -45,6 +45,7 @@ import javax.swing.table.TableRowSorter;
 
 import supermercado.db.ConexionDB;
 import supermercado.modelo.Producto;
+import supermercado.servicio.ImportadorProductosExcel;
 import supermercado.servicio.SistemaFacturacion;
 import java.io.File;
 
@@ -214,17 +215,20 @@ public class InventarioFrame extends JFrame {
             btnEditar = new JButton("Editar");
             btnAjustarStock = new JButton("Ajustar stock");
             btnEliminar = new JButton("Activar / Desactivar");
+            JButton btnImportar = new JButton("Importar Excel");
 
             Dimension dimBtn = new Dimension(150, 36);
             UIUtils.estilizarBoton(btnAgregar, new Color(30, 130, 76));
             UIUtils.estilizarBoton(btnEditar, new Color(34, 85, 153));
             UIUtils.estilizarBoton(btnAjustarStock, new Color(140, 80, 10));
             UIUtils.estilizarBoton(btnEliminar, new Color(160, 40, 40));
+            UIUtils.estilizarBoton(btnImportar, new Color(90, 120, 220));
 
             btnAgregar.setPreferredSize(dimBtn);
             btnEditar.setPreferredSize(dimBtn);
             btnAjustarStock.setPreferredSize(dimBtn);
             btnEliminar.setPreferredSize(new Dimension(170, 36));
+            btnImportar.setPreferredSize(new Dimension(150, 36));
 
             btnEditar.setEnabled(false);
             btnAjustarStock.setEnabled(false);
@@ -250,10 +254,12 @@ public class InventarioFrame extends JFrame {
             btnEditar.addActionListener(e -> editarSeleccionado());
             btnAjustarStock.addActionListener(e -> ajustarStock());
             btnEliminar.addActionListener(e -> toggleActivoSeleccionado());
+            btnImportar.addActionListener(e -> importarDesdeExcel());
 
             filaBotones.add(btnAgregar);
             filaBotones.add(btnEditar);
             filaBotones.add(btnAjustarStock);
+            filaBotones.add(btnImportar);
             filaBotones.add(btnEliminar);
         }
 
@@ -324,31 +330,31 @@ public class InventarioFrame extends JFrame {
         JTextField txtStock = campo(nuevo ? "0" : String.valueOf(prod.getStock()));
 
         // ---- Selector de imagen ----
-JLabel lblPreview = new JLabel("Sin imagen", SwingConstants.CENTER);
-lblPreview.setPreferredSize(new Dimension(90, 90));
-lblPreview.setBorder(BorderFactory.createLineBorder(new Color(180, 190, 210)));
-lblPreview.setFont(new Font("Segoe UI", Font.ITALIC, 10));
+        JLabel lblPreview = new JLabel("Sin imagen", SwingConstants.CENTER);
+        lblPreview.setPreferredSize(new Dimension(90, 90));
+        lblPreview.setBorder(BorderFactory.createLineBorder(new Color(180, 190, 210)));
+        lblPreview.setFont(new Font("Segoe UI", Font.ITALIC, 10));
 
-final File[] imagenSeleccionada = { null }; // referencia mutable para el listener
+        final File[] imagenSeleccionada = { null }; // referencia mutable para el listener
 
-if (!nuevo && prod.getRutaImagen() != null) {
-    File imgActual = supermercado.util.GestorImagenes.obtenerArchivo(prod.getRutaImagen());
-    if (imgActual != null)
-        setPreview(lblPreview, imgActual);
-}
+        if (!nuevo && prod.getRutaImagen() != null) {
+            File imgActual = supermercado.util.GestorImagenes.obtenerArchivo(prod.getRutaImagen());
+            if (imgActual != null)
+                setPreview(lblPreview, imgActual);
+        }
 
-    JButton btnImagen = new JButton("Seleccionar imagen...");
-UIUtils.estilizarBoton(btnImagen, new Color(80, 80, 150));
-btnImagen.addActionListener(e -> {
-    javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
-    chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-            "Imagenes", "jpg", "jpeg", "png"));
-    int res = chooser.showOpenDialog(dlg);
-    if (res == javax.swing.JFileChooser.APPROVE_OPTION) {
-        imagenSeleccionada[0] = chooser.getSelectedFile();
-        setPreview(lblPreview, imagenSeleccionada[0]);
-    }
-});
+        JButton btnImagen = new JButton("Seleccionar imagen...");
+        UIUtils.estilizarBoton(btnImagen, new Color(80, 80, 150));
+        btnImagen.addActionListener(e -> {
+            javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                    "Imagenes", "jpg", "jpeg", "png"));
+            int res = chooser.showOpenDialog(dlg);
+            if (res == javax.swing.JFileChooser.APPROVE_OPTION) {
+                imagenSeleccionada[0] = chooser.getSelectedFile();
+                setPreview(lblPreview, imagenSeleccionada[0]);
+            }
+        });
 
         txtCod.setEditable(nuevo);
         if (!nuevo)
@@ -366,9 +372,6 @@ btnImagen.addActionListener(e -> {
                 i++;
             }
         }
-
-        
-
 
         JComboBox<String> cmbIva = new JComboBox<>(new String[] { "0%  - Exento", "5%", "19%" });
         if (!nuevo) {
@@ -400,7 +403,6 @@ btnImagen.addActionListener(e -> {
         g.gridwidth = 2;
         panel.add(lblErr, g);
 
-
         g.gridx = 0;
         g.gridy = etiq.length;
         panel.add(new JLabel("Imagen:"), g);
@@ -413,8 +415,6 @@ btnImagen.addActionListener(e -> {
         g.anchor = GridBagConstraints.CENTER;
         panel.add(lblPreview, g);
         g.anchor = GridBagConstraints.WEST;
-
-
 
         JPanel bp = new JPanel(new GridLayout(1, 2, 10, 0));
         bp.setBackground(Color.WHITE);
@@ -471,18 +471,18 @@ btnImagen.addActionListener(e -> {
                     .mapToInt(Map.Entry::getKey).findFirst().orElse(1);
 
             String rutaImagenFinal = nuevo ? null : prod.getRutaImagen();
-                if (imagenSeleccionada[0] != null) {
-                 try {
+            if (imagenSeleccionada[0] != null) {
+                try {
                     rutaImagenFinal = supermercado.util.GestorImagenes
-                    .guardarImagenProducto(cod, imagenSeleccionada[0]);
-                     } catch (Exception exImg) {
-                 lblErr.setText("Error al guardar imagen: " + exImg.getMessage());
-        return;
-    }
-}
+                            .guardarImagenProducto(cod, imagenSeleccionada[0]);
+                } catch (Exception exImg) {
+                    lblErr.setText("Error al guardar imagen: " + exImg.getMessage());
+                    return;
+                }
+            }
             try {
                 if (nuevo)
-                    insertarProducto(cod, nom, pr, st, idCat , rutaImagenFinal);
+                    insertarProducto(cod, nom, pr, st, idCat, rutaImagenFinal);
                 else
                     actualizarProducto(prod.getId(), nom, pr, st, idCat, rutaImagenFinal);
                 recargar();
@@ -649,6 +649,32 @@ btnImagen.addActionListener(e -> {
             abrirDialogoProducto(p);
     }
 
+    private void importarDesdeExcel() {
+        javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+        chooser.setDialogTitle("Seleccionar archivo Excel");
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "Excel (*.xlsx, *.xls)", "xlsx", "xls"));
+
+        int opcion = chooser.showOpenDialog(this);
+        if (opcion != javax.swing.JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File archivo = chooser.getSelectedFile();
+        try {
+            ImportadorProductosExcel importador = new ImportadorProductosExcel();
+            int importados = importador.importar(archivo);
+            recargar();
+            JOptionPane.showMessageDialog(this,
+                    "Se importaron " + importados + " productos correctamente.",
+                    "Importación completada", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "No se pudo importar el archivo.\n" + ex.getMessage(),
+                    "Error de importación", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // =====================================================================
     // OPERACIONES BD
     // =====================================================================
@@ -660,7 +686,8 @@ btnImagen.addActionListener(e -> {
             throw new Exception("Ya existe el codigo " + id);
 
         PreparedStatement ps = ConexionDB.getConexion().prepareStatement(
-                "INSERT INTO supermercado.productos (id_producto,nombre,precio,stock,id_categoria,activo,ruta_imagen) " +
+                "INSERT INTO supermercado.productos (id_producto,nombre,precio,stock,id_categoria,activo,ruta_imagen) "
+                        +
                         "VALUES (?,?,?,?,?,true,?)");
         ps.setString(1, id);
         ps.setString(2, nombre);
@@ -679,8 +706,7 @@ btnImagen.addActionListener(e -> {
         ps.setDouble(2, precio);
         ps.setInt(3, stock);
         ps.setInt(4, idCat);
-        ps.setString(5, rutaImagen);
-        ps.setString(6, id);
+        ps.setString(5, id);
         ps.executeUpdate();
     }
 
@@ -717,15 +743,14 @@ btnImagen.addActionListener(e -> {
 
     private void setPreview(JLabel label, File archivo) {
         try {
-        java.awt.Image img = new javax.swing.ImageIcon(archivo.getAbsolutePath())
-                .getImage().getScaledInstance(90, 90, java.awt.Image.SCALE_SMOOTH);
-        label.setIcon(new javax.swing.ImageIcon(img));
-        label.setText(null);
+            java.awt.Image img = new javax.swing.ImageIcon(archivo.getAbsolutePath())
+                    .getImage().getScaledInstance(90, 90, java.awt.Image.SCALE_SMOOTH);
+            label.setIcon(new javax.swing.ImageIcon(img));
+            label.setText(null);
         } catch (Exception ex) {
-        label.setIcon(null);
-        label.setText("Sin imagen");
-    }
+            label.setIcon(null);
+            label.setText("Sin imagen");
+        }
 
-    
-}
+    }
 }
