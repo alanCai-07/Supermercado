@@ -15,30 +15,38 @@ public class Inventario {
 
     // ---- Cargar todos los productos desde MySQL ----
     public void cargarDesdeDB() throws SQLException {
-    productos.clear();
-    String sql = """
-            SELECT p.id_producto, p.nombre, p.precio, p.stock,
-                   c.nombre AS categoria, c.impuesto, p.ruta_imagen
-            FROM supermercado.productos p
-            JOIN supermercado.categorias c ON p.id_categoria = c.id_categoria
-            WHERE p.activo = TRUE
-            """;
-    try (Statement st = ConexionDB.getConexion().createStatement();
-            ResultSet rs = st.executeQuery(sql)) {
-        while (rs.next()) {
-            Producto p = new Producto(
-                    rs.getString("id_producto"),
-                    rs.getString("nombre"),
-                    rs.getDouble("precio"),
-                    rs.getString("categoria"),
-                    rs.getDouble("impuesto"),
-                    rs.getInt("stock"));
-            p.setRutaImagen(rs.getString("ruta_imagen"));
-            productos.put(p.getId(), p);
+        productos.clear();
+        String sql = """
+                SELECT p.id_producto, p.nombre, p.precio, p.stock,
+                       c.nombre AS categoria, c.impuesto, p.ruta_imagen
+                FROM supermercado.productos p
+                JOIN supermercado.categorias c ON p.id_categoria = c.id_categoria
+                WHERE p.activo = TRUE
+                """;
+        try (Statement st = ConexionDB.getConexion().createStatement();
+                ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Producto p = new Producto(
+                        rs.getString("id_producto"),
+                        rs.getString("nombre"),
+                        rs.getDouble("precio"),
+                        rs.getString("categoria"),
+                        rs.getDouble("impuesto"),
+                        rs.getInt("stock"));
+                String ruta = rs.getString("ruta_imagen");
+                if (ruta != null) {
+                    ruta = ruta.trim();
+                    if (ruta.isEmpty()) {
+                        ruta = null;
+                    }
+                }
+                p.setRutaImagen(ruta);
+                productos.put(p.getId(), p);
+            }
         }
+        System.out.println("[Inventario] " + productos.size() + " productos cargados.");
     }
-    System.out.println("[Inventario] " + productos.size() + " productos cargados.");
-}
+
     // ---- Buscar por ID ----
     public Producto buscarProducto(String id) {
         return productos.get(id);

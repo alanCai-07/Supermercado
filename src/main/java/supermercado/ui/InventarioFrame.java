@@ -475,6 +475,7 @@ public class InventarioFrame extends JFrame {
                 try {
                     rutaImagenFinal = supermercado.util.GestorImagenes
                             .guardarImagenProducto(cod, imagenSeleccionada[0]);
+                    System.out.println("[Inventario] imagen guardada -> " + rutaImagenFinal);
                 } catch (Exception exImg) {
                     lblErr.setText("Error al guardar imagen: " + exImg.getMessage());
                     return;
@@ -695,18 +696,21 @@ public class InventarioFrame extends JFrame {
         ps.setInt(4, stock);
         ps.setInt(5, idCat);
         ps.setString(6, rutaImagen);
+        System.out.println("[Inventario] INSERT producto: " + id + " ruta_imagen='" + rutaImagen + "'");
         ps.executeUpdate();
     }
 
     private void actualizarProducto(String id, String nombre, double precio,
             int stock, int idCat, String rutaImagen) throws Exception {
         PreparedStatement ps = ConexionDB.getConexion().prepareStatement(
-                "UPDATE supermercado.productos SET nombre=?,precio=?,stock=?,id_categoria=? WHERE id_producto=?");
+                "UPDATE supermercado.productos SET nombre=?,precio=?,stock=?,id_categoria=?,ruta_imagen=? WHERE id_producto=?");
         ps.setString(1, nombre);
         ps.setDouble(2, precio);
         ps.setInt(3, stock);
         ps.setInt(4, idCat);
-        ps.setString(5, id);
+        ps.setString(5, rutaImagen);
+        ps.setString(6, id);
+        System.out.println("[Inventario] UPDATE producto: " + id + " ruta_imagen='" + rutaImagen + "'");
         ps.executeUpdate();
     }
 
