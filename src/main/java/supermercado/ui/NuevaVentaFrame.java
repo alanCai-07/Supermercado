@@ -29,6 +29,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.ImageIcon;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -36,6 +37,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import supermercado.dao.ClienteDAO;
@@ -75,6 +77,7 @@ public class NuevaVentaFrame extends JFrame {
     private JTable tablaProductos;
     private DefaultTableModel modeloProductos;
     private JTextField txtCant;
+    private JLabel lblProductoFoto;
 
     // ---- Componentes carrito ----
     private JTable tablaItems;
@@ -213,13 +216,13 @@ public class NuevaVentaFrame extends JFrame {
 
         // Tabla productos
         modeloProductos = new DefaultTableModel(
-                new String[] { "Codigo", "Nombre", "Precio", "IVA%", "Stock" }, 0) {
+                new String[] { "Codigo", "Nombre", "Precio", "IVA%", "Stock", "Foto" }, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
         tablaProductos = new JTable(modeloProductos);
-        tablaProductos.setRowHeight(24);
+        tablaProductos.setRowHeight(64);
         tablaProductos.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         tablaProductos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tablaProductos.getColumnModel().getColumn(0).setPreferredWidth(55);
@@ -227,7 +230,19 @@ public class NuevaVentaFrame extends JFrame {
         tablaProductos.getColumnModel().getColumn(2).setPreferredWidth(65);
         tablaProductos.getColumnModel().getColumn(3).setPreferredWidth(45);
         tablaProductos.getColumnModel().getColumn(4).setPreferredWidth(45);
+        tablaProductos.getColumnModel().getColumn(5).setPreferredWidth(70);
+        tablaProductos.setDefaultRenderer(Object.class, rendererImagenProducto());
         panel.add(new JScrollPane(tablaProductos), BorderLayout.CENTER);
+
+        // Panel de previsualizacion de producto
+        JPanel panelFoto = new JPanel(new BorderLayout());
+        panelFoto.setBackground(Color.WHITE);
+        panelFoto.setBorder(BorderFactory.createTitledBorder("Producto seleccionado"));
+        lblProductoFoto = new JLabel("Sin imagen", SwingConstants.CENTER);
+        lblProductoFoto.setPreferredSize(new Dimension(120, 120));
+        lblProductoFoto.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblProductoFoto.setForeground(Color.GRAY);
+        panelFoto.add(lblProductoFoto, BorderLayout.CENTER);
 
         // Panel cantidad + botones
         JPanel panelAgregar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 6));
@@ -254,7 +269,12 @@ public class NuevaVentaFrame extends JFrame {
         panelAgregar.add(btnMas);
         panelAgregar.add(Box.createHorizontalStrut(8));
         panelAgregar.add(btnAgregar);
-        panel.add(panelAgregar, BorderLayout.SOUTH);
+
+        JPanel panelInferior = new JPanel(new BorderLayout(0, 6));
+        panelInferior.setBackground(Color.WHITE);
+        panelInferior.add(panelFoto, BorderLayout.CENTER);
+        panelInferior.add(panelAgregar, BorderLayout.SOUTH);
+        panel.add(panelInferior, BorderLayout.SOUTH);
 
         // Acciones
         ActionListener accionBuscar = e -> buscarProductos(txtBuscarProducto.getText());
@@ -263,6 +283,11 @@ public class NuevaVentaFrame extends JFrame {
         btnMenos.addActionListener(e -> cambiarCantidad(-1));
         btnMas.addActionListener(e -> cambiarCantidad(+1));
         txtCant.addActionListener(e -> btnAgregar.doClick());
+        tablaProductos.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                actualizarPrevisualizacionProducto();
+            }
+        });
 
         btnAgregar.addActionListener(e -> {
             int fila = tablaProductos.getSelectedRow();
@@ -306,15 +331,22 @@ public class NuevaVentaFrame extends JFrame {
         panelCarritoBorder.setBackground(Color.WHITE);
 
         modeloItems = new DefaultTableModel(
-                new String[] { "Producto", "Cant.", "Unitario", "IVA", "Total" }, 0) {
+                new String[] { "Foto", "Producto", "Cant.", "Unitario", "IVA", "Total" }, 0) {
             public boolean isCellEditable(int r, int c) {
                 return false;
             }
         };
         tablaItems = new JTable(modeloItems);
-        tablaItems.setRowHeight(26);
+        tablaItems.setRowHeight(64);
         tablaItems.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        tablaItems.getColumnModel().getColumn(0).setPreferredWidth(220);
+        tablaItems.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tablaItems.getColumnModel().getColumn(0).setPreferredWidth(70);
+        tablaItems.getColumnModel().getColumn(1).setPreferredWidth(180);
+        tablaItems.getColumnModel().getColumn(2).setPreferredWidth(40);
+        tablaItems.getColumnModel().getColumn(3).setPreferredWidth(80);
+        tablaItems.getColumnModel().getColumn(4).setPreferredWidth(80);
+        tablaItems.getColumnModel().getColumn(5).setPreferredWidth(100);
+        tablaItems.setDefaultRenderer(Object.class, rendererImagenProducto());
         panelCarritoBorder.add(new JScrollPane(tablaItems), BorderLayout.CENTER);
 
         JButton btnEliminar = new JButton("Eliminar item seleccionado");
@@ -713,7 +745,9 @@ public class NuevaVentaFrame extends JFrame {
         itemsCarrito.add(item);
 
         modeloItems.addRow(new Object[] {
-                p.getNombre(), cantidad,
+                crearIconoProducto(p),
+                p.getNombre(),
+                cantidad,
                 String.format("$%,.0f", item.getPrecioUnitario()),
                 String.format("$%,.0f", item.getImpuesto()),
                 String.format("$%,.0f", item.getTotal())
@@ -771,8 +805,83 @@ public class NuevaVentaFrame extends JFrame {
                         p.getId(), p.getNombre(),
                         String.format("$%,.0f", p.getPrecio()),
                         String.format("%.0f%%", p.getImpuesto() * 100),
-                        p.getStock()
+                        p.getStock(),
+                        crearIconoProducto(p)
                 });
+
+        if (tablaProductos.getRowCount() > 0) {
+            tablaProductos.setRowSelectionInterval(0, 0);
+            actualizarPrevisualizacionProducto();
+        } else {
+            lblProductoFoto.setIcon(null);
+            lblProductoFoto.setText("Sin imagen");
+        }
+    }
+
+    private void actualizarPrevisualizacionProducto() {
+        int fila = tablaProductos.getSelectedRow();
+        if (fila < 0) {
+            lblProductoFoto.setIcon(null);
+            lblProductoFoto.setText("Sin imagen");
+            return;
+        }
+        int filaModelo = tablaProductos.convertRowIndexToModel(fila);
+        String id = (String) modeloProductos.getValueAt(filaModelo, 0);
+        Producto p = sistema.getInventario().buscarProducto(id);
+        ImageIcon icon = crearIconoProducto(p);
+        if (icon != null) {
+            lblProductoFoto.setIcon(icon);
+            lblProductoFoto.setText("");
+        } else {
+            lblProductoFoto.setIcon(null);
+            lblProductoFoto.setText("Sin imagen");
+        }
+    }
+
+    private DefaultTableCellRenderer rendererImagenProducto() {
+        return new DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(
+                    JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
+                if (value instanceof ImageIcon icon) {
+                    JLabel label = new JLabel();
+                    label.setOpaque(true);
+                    label.setHorizontalAlignment(SwingConstants.CENTER);
+                    label.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+                    label.setBackground(isSelected
+                            ? new Color(184, 207, 229)
+                            : (row % 2 == 0 ? new Color(245, 250, 245) : Color.WHITE));
+                    label.setIcon(icon);
+                    label.setText("");
+                    return label;
+                }
+                return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            }
+        };
+    }
+
+    private ImageIcon crearIconoProducto(Producto p) {
+        if (p == null || p.getRutaImagen() == null || p.getRutaImagen().isBlank()) {
+            return null;
+        }
+
+        File archivo = supermercado.util.GestorImagenes.obtenerArchivo(p.getRutaImagen());
+        if (archivo == null) {
+            System.out.println("[NuevaVentaFrame] No se encontro imagen para producto '" + p.getId() + "' ruta='"
+                    + p.getRutaImagen() + "'");
+            return null;
+        }
+
+        try {
+            java.awt.Image img = new ImageIcon(archivo.getAbsolutePath()).getImage();
+            img = img.getScaledInstance(56, 56, java.awt.Image.SCALE_SMOOTH);
+            return new ImageIcon(img);
+        } catch (Exception ex) {
+            System.out.println("[NuevaVentaFrame] Error al crear icono de imagen para producto '" + p.getId() + "': "
+                    + ex.getMessage());
+            return null;
+        }
     }
 
     // =========================================================
