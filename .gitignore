@@ -10,7 +10,7 @@
 src/main/resources/config.properties
 config.properties
 credenciales base de datos posgrest.txt
-imagenes/
+
 
 # ---------------------------------------------------------------
 #  COMPILACION Y BUILD
