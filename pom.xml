@@ -97,7 +97,15 @@
         <version>2.23.1</version>
     </dependency>
 
+        <!-- JFreeChart para graficos en el dashboard -->
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>1.5.3</version>
+        </dependency>
+
     </dependencies>
+
 
     <build>
         <plugins>

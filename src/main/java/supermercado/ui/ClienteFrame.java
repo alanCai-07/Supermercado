@@ -22,6 +22,7 @@ public class ClienteFrame extends JFrame {
 
     private JTextField txtNit, txtNombre, txtTel, txtEmail, txtDir;
     private JLabel lblMsg;
+    private JPanel rootPanel;
 
     public ClienteFrame() {
         setTitle("Registrar / Buscar Cliente");
@@ -36,6 +37,7 @@ public class ClienteFrame extends JFrame {
 
     private void construirUI() {
         JPanel root = new JPanel(new GridBagLayout());
+        this.rootPanel = root;
         root.setBorder(BorderFactory.createEmptyBorder(16, 24, 16, 24));
         root.setBackground(Color.WHITE);
         GridBagConstraints g = new GridBagConstraints();
@@ -89,6 +91,7 @@ public class ClienteFrame extends JFrame {
 
         add(root);
 
+        // ---- ACCIONES BOTONES ----
         btnBuscar.addActionListener(e -> {
             String nit = txtNit.getText().trim();
             if (nit.isEmpty()) {
@@ -132,6 +135,10 @@ public class ClienteFrame extends JFrame {
                 lblMsg.setText("Error: " + ex.getMessage());
             }
         });
+    }
+
+    public JPanel getRootPanel() {
+        return rootPanel;
     }
 
     private JTextField campo() {
