@@ -44,6 +44,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 
 import supermercado.db.ConexionDB;
+import supermercado.db.ConfiguracionApp;
 import supermercado.modelo.Producto;
 import supermercado.servicio.ImportadorProductosExcel;
 import supermercado.servicio.SistemaFacturacion;
@@ -59,6 +60,7 @@ public class InventarioFrame extends JFrame {
     private TableRowSorter<DefaultTableModel> sorter;
     private JTextField txtFiltro;
     private JButton btnAgregar, btnEditar, btnEliminar, btnAjustarStock;
+    private JPanel rootPanel;
 
     public InventarioFrame() {
         setTitle("Inventario de Productos" + (esAdmin ? "  [Modo Administrador]" : ""));
@@ -82,6 +84,7 @@ public class InventarioFrame extends JFrame {
         // SOUTH = leyenda + botones (apilados con BoxLayout)
         // ================================================================
         JPanel root = new JPanel(new BorderLayout(0, 8));
+        this.rootPanel = root;
         root.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         root.setBackground(Color.WHITE);
 
@@ -268,6 +271,9 @@ public class InventarioFrame extends JFrame {
 
         add(root);
 
+        // Exponer el panel raiz para integracion en la ventana principal
+        // (se puede extraer con getRootPanel())
+
         // Filtro en tiempo real
         txtFiltro.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
@@ -278,6 +284,10 @@ public class InventarioFrame extends JFrame {
 
         btnRecargar.addActionListener(e -> recargar());
         cargarDatos();
+    }
+
+    public JPanel getRootPanel() {
+        return rootPanel;
     }
 
     // =====================================================================
@@ -500,6 +510,26 @@ public class InventarioFrame extends JFrame {
         dlg.setVisible(true);
     }
 
+    private String obtenerTablaProductos() {
+        ConfiguracionApp cfg = ConfiguracionApp.getInstance();
+        if ("mysql".equalsIgnoreCase(cfg.getMotor())) {
+            return "productos";
+        }
+        String esquema = cfg.getSchema();
+        return (esquema == null || esquema.isBlank() || "public".equalsIgnoreCase(esquema))
+                ? "productos"
+                : esquema + ".productos";
+    }
+
+    static int calcularNuevoStock(int stockActual, int cantidad, String operacion) {
+        return switch (operacion) {
+            case "AGREGAR" -> stockActual + cantidad;
+            case "RESTAR" -> Math.max(0, stockActual - cantidad);
+            case "EXACTA" -> Math.max(0, cantidad);
+            default -> stockActual;
+        };
+    }
+
     // =====================================================================
     // DIALOGO AJUSTAR STOCK
     // =====================================================================
@@ -581,15 +611,16 @@ public class InventarioFrame extends JFrame {
                 return;
             }
 
-            int nuevo = switch (cmbOp.getSelectedIndex()) {
-                case 0 -> cant;
-                case 1 -> actual + cant;
-                case 2 -> Math.max(0, actual - cant);
-                default -> actual;
+            String operacion = switch (cmbOp.getSelectedIndex()) {
+                case 0 -> "EXACTA";
+                case 1 -> "AGREGAR";
+                case 2 -> "RESTAR";
+                default -> "EXACTA";
             };
+            int nuevo = calcularNuevoStock(actual, cant, operacion);
             try {
                 PreparedStatement ps = ConexionDB.getConexion()
-                        .prepareStatement("UPDATE productos SET stock=? WHERE id_producto=?");
+                        .prepareStatement("UPDATE " + obtenerTablaProductos() + " SET stock=? WHERE id_producto=?");
                 ps.setInt(1, nuevo);
                 ps.setString(2, id);
                 ps.executeUpdate();

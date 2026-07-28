@@ -54,6 +54,8 @@ public class BuscarFacturaFrame extends JFrame {
     private JTextField txtFiltro;
     private JComboBox<String> cmbEstado;
 
+    private JPanel rootPanel;
+
     // Botones de accion (siempre visibles)
     private JButton btnVerPDF;
     private JButton btnVerTermica;
@@ -67,14 +69,14 @@ public class BuscarFacturaFrame extends JFrame {
     private String[] filaActual = null;
 
     public BuscarFacturaFrame() {
-    setTitle("Historial de Facturas");
-    setSize(1600, 760);                         
-    setMinimumSize(new Dimension(1100, 760));     
-    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    setIconImage(AppIcon.getIcon());
-    construirUI();
-    setLocationRelativeTo(null);
-    cargarFacturas();
+        setTitle("Historial de Facturas");
+        setSize(1600, 760);
+        setMinimumSize(new Dimension(1100, 760));
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setIconImage(AppIcon.getIcon());
+        construirUI();
+        setLocationRelativeTo(null);
+        cargarFacturas();
     }
 
     // =========================================================
@@ -83,12 +85,18 @@ public class BuscarFacturaFrame extends JFrame {
     private void construirUI() {
         JPanel root = new JPanel(new BorderLayout(0, 0));
         root.setBackground(Color.WHITE);
+        this.rootPanel = root;
 
         root.add(construirBarra(), BorderLayout.NORTH);
         root.add(construirCentro(), BorderLayout.CENTER);
         root.add(construirDetalle(), BorderLayout.SOUTH);
 
         add(root);
+
+    }
+
+    public JPanel getRootPanel() {
+        return rootPanel;
     }
 
     // =========================================================

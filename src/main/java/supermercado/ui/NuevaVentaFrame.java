@@ -87,6 +87,7 @@ public class NuevaVentaFrame extends JFrame {
     private JTextField txtMontoPago;
     private JButton btnCobrar;
     private JPanel panelCarritoBorder;
+    private JPanel rootPanel;
 
     public NuevaVentaFrame(JFrame parent) {
         this.parent = parent;
@@ -101,6 +102,10 @@ public class NuevaVentaFrame extends JFrame {
         buscarProductos("");
     }
 
+    public JPanel getRootPanel() {
+        return rootPanel;
+    }
+
     // =========================================================
     // CONSTRUCCION UI
     // =========================================================
@@ -108,6 +113,7 @@ public class NuevaVentaFrame extends JFrame {
         JPanel root = new JPanel(new BorderLayout(8, 8));
         root.setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
         root.setBackground(Color.WHITE);
+        this.rootPanel = root;
 
         // NORTH: selector de cliente (ancho completo)
         root.add(construirPanelCliente(), BorderLayout.NORTH);
