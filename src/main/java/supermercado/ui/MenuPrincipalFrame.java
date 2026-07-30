@@ -15,6 +15,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import supermercado.servicio.SistemaFacturacion;
@@ -45,6 +47,7 @@ public class MenuPrincipalFrame extends JFrame {
         private void construirUI(String cajero) {
                 JPanel root = new JPanel(new BorderLayout());
                 root.setBackground(Color.WHITE);
+                boolean esAdmin = SistemaFacturacion.getInstance().getCajeroActivo().esAdmin();
 
                 // ---- BANNER ----
                 JPanel banner = new JPanel(new BorderLayout());
@@ -91,6 +94,11 @@ public class MenuPrincipalFrame extends JFrame {
                 JButton sClientes = botonMenu("Clientes", "", VERDE);
                 JButton sReportes = botonMenu("Reportes", "", NARANJA);
                 JButton sBuscar = botonMenu("Buscar Factura", "", new Color(80, 80, 150));
+                JButton sNuevoCajero = null;
+                if (esAdmin) {
+                        sNuevoCajero = botonMenu("Nuevo Cajero", "", new Color(120, 70, 180));
+                        sNuevoCajero.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+                }
                 JButton sSalir = botonMenu("Cerrar Sesion", "", ROJO);
 
                 sNuevaVenta.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
@@ -109,6 +117,10 @@ public class MenuPrincipalFrame extends JFrame {
                 sidebar.add(sReportes);
                 sidebar.add(Box.createVerticalStrut(8));
                 sidebar.add(sBuscar);
+                if (sNuevoCajero != null) {
+                        sidebar.add(Box.createVerticalStrut(8));
+                        sidebar.add(sNuevoCajero);
+                }
                 sidebar.add(Box.createVerticalStrut(12));
                 sidebar.add(sSalir);
 
@@ -117,6 +129,9 @@ public class MenuPrincipalFrame extends JFrame {
                 sClientes.addActionListener(e -> mostrarVista("clientes"));
                 sReportes.addActionListener(e -> mostrarVista("reportes"));
                 sBuscar.addActionListener(e -> mostrarVista("buscarFactura"));
+                if (sNuevoCajero != null) {
+                        sNuevoCajero.addActionListener(e -> abrirDialogoRegistroCajero());
+                }
                 // Dashboard button (first view)
                 JButton sDashboard = botonMenu("Dashboard", "", new Color(60, 60, 60));
                 sDashboard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
@@ -155,7 +170,7 @@ public class MenuPrincipalFrame extends JFrame {
                 lblBienvenida.setBorder(BorderFactory.createEmptyBorder(12, 0, 4, 0));
                 panel.add(lblBienvenida, BorderLayout.NORTH);
 
-                JPanel grid = new JPanel(new GridLayout(2, 3, 16, 16));
+                JPanel grid = new JPanel(new GridLayout(3, 3, 16, 16));
                 grid.setBackground(Color.WHITE);
                 grid.setBorder(BorderFactory.createEmptyBorder(20, 40, 30, 40));
 
@@ -169,6 +184,11 @@ public class MenuPrincipalFrame extends JFrame {
                                 "Generar reportes de ventas", NARANJA);
                 JButton btnBuscarFact = botonMenu("Buscar Factura",
                                 "Consultar o anular facturas", new Color(80, 80, 150));
+                JButton btnNuevoCajero = null;
+                if (SistemaFacturacion.getInstance().getCajeroActivo().esAdmin()) {
+                        btnNuevoCajero = botonMenu("Nuevo Cajero",
+                                        "Crear usuario de caja", new Color(120, 70, 180));
+                }
                 JButton btnSalir = botonMenu("Cerrar Sesion",
                                 "Salir del sistema", ROJO);
 
@@ -177,6 +197,9 @@ public class MenuPrincipalFrame extends JFrame {
                 grid.add(btnClientes);
                 grid.add(btnReportes);
                 grid.add(btnBuscarFact);
+                if (btnNuevoCajero != null) {
+                        grid.add(btnNuevoCajero);
+                }
                 grid.add(btnSalir);
 
                 panel.add(grid, BorderLayout.CENTER);
@@ -186,6 +209,9 @@ public class MenuPrincipalFrame extends JFrame {
                 btnClientes.addActionListener(e -> mostrarVista("clientes"));
                 btnReportes.addActionListener(e -> mostrarVista("reportes"));
                 btnBuscarFact.addActionListener(e -> mostrarVista("buscarFactura"));
+                if (btnNuevoCajero != null) {
+                        btnNuevoCajero.addActionListener(e -> abrirDialogoRegistroCajero());
+                }
 
                 btnSalir.addActionListener(e -> {
                         int r = JOptionPane.showConfirmDialog(this,
@@ -199,6 +225,48 @@ public class MenuPrincipalFrame extends JFrame {
                 });
 
                 return panel;
+        }
+
+        private void abrirDialogoRegistroCajero() {
+                JPanel form = new JPanel(new java.awt.GridLayout(4, 2, 8, 8));
+                form.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+
+                JTextField txtId = new JTextField();
+                JTextField txtNombre = new JTextField();
+                JTextField txtTurno = new JTextField();
+                JPasswordField txtPass = new JPasswordField();
+
+                form.add(new JLabel("ID cajero:"));
+                form.add(txtId);
+                form.add(new JLabel("Nombre:"));
+                form.add(txtNombre);
+                form.add(new JLabel("Turno:"));
+                form.add(txtTurno);
+                form.add(new JLabel("Contrasena:"));
+                form.add(txtPass);
+
+                int result = JOptionPane.showConfirmDialog(this, form,
+                                "Registrar usuario de caja", JOptionPane.OK_CANCEL_OPTION,
+                                JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                        try {
+                                SistemaFacturacion.getInstance().registrarCajeroCaja(
+                                                txtId.getText(),
+                                                txtNombre.getText(),
+                                                txtTurno.getText(),
+                                                new String(txtPass.getPassword()));
+                                JOptionPane.showMessageDialog(this,
+                                                "Usuario de caja creado correctamente. El rol queda limitado a CAJERO.",
+                                                "Registro exitoso",
+                                                JOptionPane.INFORMATION_MESSAGE);
+                        } catch (Exception ex) {
+                                JOptionPane.showMessageDialog(this,
+                                                ex.getMessage(),
+                                                "No se pudo registrar el usuario",
+                                                JOptionPane.ERROR_MESSAGE);
+                        }
+                }
         }
 
         private JPanel crearVistaModulo(JFrame frame, String nombreVista) {

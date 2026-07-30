@@ -24,6 +24,7 @@ target/
 #  Son archivos de salida, no de codigo fuente
 # ---------------------------------------------------------------
 reportes/
+imagenes/
 
 # ---------------------------------------------------------------
 #  IDE Y SISTEMA OPERATIVO
