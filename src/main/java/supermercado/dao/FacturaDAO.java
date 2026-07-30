@@ -147,6 +147,35 @@ public class FacturaDAO {
         return filas;
     }
 
+    public List<String[]> ventasRango(java.time.LocalDate desde, java.time.LocalDate hasta) throws SQLException {
+        List<String[]> filas = new ArrayList<>();
+        String sql = """
+                SELECT f.numero_factura, TO_CHAR(f.fecha, 'HH24:MI') AS hora,
+                       c.nombre AS cliente, ca.nombre AS cajero,
+                       f.total, f.metodo_pago, f.estado
+                FROM supermercado.facturas f
+                JOIN supermercado.clientes c  ON f.nit_cliente = c.nit
+                JOIN supermercado.cajeros  ca ON f.id_cajero   = ca.id_cajero
+                WHERE DATE(f.fecha) BETWEEN ? AND ? AND f.estado = 'PAGADA'
+                ORDER BY f.fecha
+                """;
+        try (PreparedStatement ps = ConexionDB.getConexion().prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(desde));
+            ps.setDate(2, Date.valueOf(hasta));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next())
+                filas.add(new String[] {
+                        rs.getString("numero_factura"),
+                        rs.getString("hora").substring(0, 5),
+                        rs.getString("cliente"),
+                        rs.getString("cajero"),
+                        String.format("%,.0f", rs.getDouble("total")),
+                        rs.getString("metodo_pago")
+                });
+        }
+        return filas;
+    }
+
     // ---- Totales del dia ----
     public double totalDia(java.time.LocalDate fecha) throws SQLException {
         String sql = "SELECT COALESCE(SUM(total),0) FROM supermercado.facturas WHERE DATE(fecha)=? AND estado='PAGADA'";

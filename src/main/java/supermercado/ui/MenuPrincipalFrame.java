@@ -70,7 +70,8 @@ public class MenuPrincipalFrame extends JFrame {
 
                 panelContenido.setBackground(Color.WHITE);
                 panelContenido.add(crearVistaMenu(cajero), "menu");
-                panelContenido.add(new DashboardPanel(), "dashboard");
+                DashboardPanel dashboardPanel = new DashboardPanel();
+                panelContenido.add(dashboardPanel, "dashboard");
                 panelContenido.add(crearVistaModulo(new NuevaVentaFrame(this), "Nueva Venta"), "nuevaVenta");
                 panelContenido.add(crearVistaModulo(new InventarioFrame(), "Inventario"), "inventario");
                 panelContenido.add(crearVistaModulo(new ClienteFrame(), "Clientes"), "clientes");
@@ -121,7 +122,10 @@ public class MenuPrincipalFrame extends JFrame {
                 sDashboard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
                 sidebar.add(Box.createVerticalStrut(8));
                 sidebar.add(sDashboard);
-                sDashboard.addActionListener(e -> mostrarVista("dashboard"));
+                sDashboard.addActionListener(e -> {
+                        dashboardPanel.refresh();
+                        mostrarVista("dashboard");
+                });
                 sSalir.addActionListener(e -> {
                         int r = JOptionPane.showConfirmDialog(this,
                                         "¿Desea cerrar la sesion?", "Confirmar",

@@ -31,13 +31,14 @@ public class ReportesFrame extends JFrame {
     private JTextField txtDesde, txtHasta;
     private JLabel lblEstado;
     private JPanel rootPanel;
+    private DashboardPanel dashboardPanel;
 
     public ReportesFrame() {
         setTitle("Generar Reportes PDF");
-        setSize(520, 420);
+        setSize(1150, 780);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setIconImage(AppIcon.getIcon());
-        setResizable(false);
+        setResizable(true);
         construirUI();
         // Centrar en la pantalla DESPUÉS de establecer el tamaño
         setLocationRelativeTo(null);
@@ -72,7 +73,31 @@ public class ReportesFrame extends JFrame {
         panelFechas.add(txtDesde);
         panelFechas.add(new JLabel("Hasta:"));
         panelFechas.add(txtHasta);
-        root.add(panelFechas, BorderLayout.CENTER);
+
+        txtDesde.addActionListener(e -> actualizarDashboard());
+        txtHasta.addActionListener(e -> actualizarDashboard());
+        txtDesde.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                actualizarDashboard();
+            }
+        });
+        txtHasta.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                actualizarDashboard();
+            }
+        });
+
+        JPanel centerWrapper = new JPanel(new BorderLayout(10, 10));
+        centerWrapper.setBackground(Color.WHITE);
+        centerWrapper.add(panelFechas, BorderLayout.NORTH);
+
+        dashboardPanel = new DashboardPanel(LocalDate.parse(primerDiaMes), LocalDate.parse(hoy));
+        dashboardPanel.setPreferredSize(new Dimension(0, 440));
+        centerWrapper.add(dashboardPanel, BorderLayout.CENTER);
+
+        root.add(centerWrapper, BorderLayout.CENTER);
 
         // Botones de reportes
         JPanel panelBotones = new JPanel(new GridLayout(4, 1, 0, 10));
@@ -98,6 +123,8 @@ public class ReportesFrame extends JFrame {
         btnDiario.addActionListener(e -> generarReporte("DIARIO"));
         btnProductos.addActionListener(e -> generarReporte("PRODUCTOS"));
         btnCajero.addActionListener(e -> generarReporte("CAJERO"));
+
+        actualizarDashboard();
     }
 
     public JPanel getRootPanel() {
@@ -177,6 +204,7 @@ public class ReportesFrame extends JFrame {
             }
         };
         worker.execute();
+        actualizarDashboard();
 
     }
 
@@ -185,5 +213,22 @@ public class ReportesFrame extends JFrame {
         UIUtils.estilizarBoton(b, color);
         b.setPreferredSize(new Dimension(0, 42));
         return b;
+    }
+
+    private void actualizarDashboard() {
+        try {
+            LocalDate desde = LocalDate.parse(txtDesde.getText().trim());
+            LocalDate hasta = LocalDate.parse(txtHasta.getText().trim());
+            JPanel parent = (JPanel) dashboardPanel.getParent();
+            parent.remove(dashboardPanel);
+            dashboardPanel = new DashboardPanel(desde, hasta);
+            dashboardPanel.setPreferredSize(new Dimension(0, 440));
+            parent.add(dashboardPanel, BorderLayout.CENTER);
+            parent.revalidate();
+            parent.repaint();
+        } catch (Exception ex) {
+            lblEstado.setText("Error actualizando dashboard: " + ex.getMessage());
+            lblEstado.setForeground(Color.RED);
+        }
     }
 }
